@@ -1,0 +1,330 @@
+:root {
+    /* --- Cores principais da aplicação --- */
+    --bs-primary: #0D47A1;      /* Azul Escuro - Painel Principal */
+    --bs-secondary: #4CAF50;    /* Verde Energia */
+    --bs-success: #2E7D32;      /* Verde Escuro - Painel Esquerdo */
+    --bs-info: #1E88E5;         /* Azul Elétrico */
+    --bs-light: #F5F5F5;        /* Cinza Neutro / fundo */
+    --bs-dark: #333333;         /* Texto principal */
+  
+    /* --- Cores extras personalizadas --- */
+    --bs-green-light: #A5D6A7;  /* Verde Claro - Painel Direito */
+    --bs-white: #FFFFFF;        /* Branco */
+  
+    /* --- Gradientes personalizados --- */
+    --bs-gradient-main: linear-gradient(135deg, #A5D6A7, #1E88E5);
+    --bs-gradient-button: linear-gradient(90deg, #4CAF50, #1E88E5);
+    --bs-gradient-panel: linear-gradient(120deg, #0D47A1, #4CAF50);
+    --bs-gradient-background: linear-gradient(180deg, #F5F5F5, #A5D6A7);
+  }
+  
+  /* ----------------------------- */
+  /* Painel principal (cabeçalho)  */
+  /* ----------------------------- */
+  #panel-heading-heading {
+    background-color: var(--bs-primary);
+    box-shadow: 0px 0px 10px 0px #333333;
+  }
+  
+  .navbar-brand {
+    height: 50px;
+  }
+  
+  .img-heading {
+    margin: -34px -30px -18px -27px;
+  }
+  
+  #link-heading {
+    font-family: "Bebas Neue", sans-serif;
+    font-weight: 900;
+    font-style: oblique;
+    color: var(--bs-light);
+    text-transform: uppercase;
+  }
+  
+  .txt-gridFlow {
+    margin: 0px 0px 0px -50px;
+  }
+  
+  /* ----------------------------- */
+  /* Painel lateral esquerdo fixo  */
+  /* ----------------------------- */
+  .panel-nav-lateral-esquerdo {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    width: 14em;
+    height: calc(100vh - 70px);
+    background-color: var(--bs-success);
+    color: var(--bs-white);
+    padding: 2em 1em;
+    box-shadow: inset -4px 0 8px rgba(0,0,0,0.2);
+    overflow-y: auto;
+  }
+  
+  .panel-nav-lateral-esquerdo ul li {
+    padding: 10px 0;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  
+  .panel-nav-lateral-esquerdo ul li:hover {
+    background: var(--bs-gradient-button);
+    color: var(--bs-white);
+    padding-left: 8px;
+    border-radius: 8px;
+  }
+  
+  /* ----------------------------- */
+  /* Conteúdo central adaptável    */
+  /* ----------------------------- */
+  .conteudo-central {
+    margin-left: 14em;
+    margin-right: 14em;
+    background: var(--bs-gradient-background);
+    color: var(--bs-dark);
+    overflow-y: auto;
+    min-height: calc(100vh - 70px);
+  }
+  
+  .conteudo-central h2 {
+    color: var(--bs-primary);
+  }
+  
+  /* ----------------------------- */
+  /* Painel lateral direito fixo   */
+  /* ----------------------------- */
+  .cards-laterais-direitos {
+    position: fixed;
+    top: 70px;
+    right: 0;
+    width: 14em;
+    height: calc(100vh - 70px);
+    background-color: var(--bs-green-light);
+    padding: 2em 1em;
+    overflow-y: auto;
+    box-shadow: inset 4px 0 8px rgba(0,0,0,0.2);
+  }
+  
+  .cards-laterais-direitos .card {
+    border: none;
+    background: var(--bs-white);
+    color: var(--bs-dark);
+    transition: transform 0.2s ease-in-out;
+  }
+  
+  .cards-laterais-direitos .card:hover {
+    transform: translateY(-3px);
+  }
+  
+  /* ----------------------------- */
+  /* Ajustes gerais e responsivos  */
+  /* ----------------------------- */
+  body, html {
+    height: 100%;
+    margin: 0;
+    font-family: "Montserrat", sans-serif;
+    overflow: hidden;
+    background: var(--bs-light);
+  }
+  
+  @media (max-width: 992px) {
+    .panel-nav-lateral-esquerdo,
+    .cards-laterais-direitos {
+      position: relative;
+      width: 100%;
+      height: auto;
+      box-shadow: none;
+    }
+  
+    .conteudo-central {
+      margin: 0;
+    }
+  
+    body, html {
+      overflow: auto;
+    }
+  }
+  
+  /*--------------------------------*/
+/* MODAL */
+.modal-adicionar {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    backdrop-filter: blur(10px);
+    background-color: rgba(0, 0, 0, 0.55);
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  /* Caixa central */
+  .modal-adicionar .content {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 20px;
+    color: var(--bs-white);
+    margin: auto;
+    margin-top: 5%;
+    padding: 2em;
+    width: 65%;
+    max-width: 900px;
+    box-shadow: 0px 8px 30px rgba(0, 255, 150, 0.25);
+    animation: slideIn 0.4s ease;
+    font-family: "Montserrat", sans-serif;
+    position: relative;
+    transition: box-shadow 0.4s ease;
+    animation: glowPulse 3s infinite ease-in-out;
+  }
+  
+  @keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 25px rgba(0, 255, 150, 0.4); }
+    50% { box-shadow: 0 0 45px rgba(0, 180, 255, 0.6); }
+  }
+  
+  /* Animação de entrada */
+  @keyframes slideIn {
+    from { transform: translateY(-40px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  
+  /* Fechar */
+  .modal-adicionar .fechar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+  }
+  
+  .modal-adicionar .fechar button {
+    background: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  
+  .modal-adicionar .fechar button:hover {
+    transform: scale(1.2);
+    color: var(--bs-secondary);
+  }
+  
+  /* Campos */
+  .modal-adicionar label {
+    font-weight: 600;
+    color: var(--bs-white);
+    margin-bottom: 6px;
+    display: block;
+  }
+  
+  .modal-adicionar input,
+  .modal-adicionar select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    transition: 0.2s;
+    margin-bottom: 15px;
+    font-size: 1em;
+  }
+  
+  .modal-adicionar input:focus,
+  .modal-adicionar select:focus {
+    outline: none;
+    border-color: #00ffae;
+    box-shadow: 0 0 8px #00ffae;
+  }
+  
+  /* Botões */
+  .modal-adicionar .botoes {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+  }
+  
+  .modal-adicionar button.btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(90deg, #00c3ff, #00ffae);
+    color: #fff;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease-in-out;
+  }
+  
+  .modal-adicionar button.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0px 4px 12px rgba(0, 255, 150, 0.4);
+  }
+  
+  .modal-adicionar button.btn-cancelar {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .modal-adicionar button.btn-cancelar:hover {
+    background: rgba(255, 255, 255, 0.35);
+  }
+
+  /* Ajusta a aparência do select */
+/* Aparência do select */
+.modal-adicionar select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    transition: 0.2s;
+    margin-bottom: 15px;
+    font-size: 1em;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='14' viewBox='0 0 24 24' width='14' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 14px;
+    cursor: pointer;
+  }
+  
+  /* Estilo do dropdown */
+  .modal-adicionar select option {
+    background-color: #222 !important;
+    color: #fff !important;
+  }
+  
+  /* Hover e selecionado em verde neon */
+  .modal-adicionar select option:checked,
+  .modal-adicionar select option:hover {
+    background-color: #00ffae !important;  /* verde neon */
+    color: #000 !important;                /* contraste melhor */
+    font-weight: bold;
+  }
+  
+  /* Efeito de foco */
+  .modal-adicionar select:focus {
+    outline: none;
+    border-color: #00ffae;
+    box-shadow: 0 0 8px #00ffae;
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+  
+
+  
