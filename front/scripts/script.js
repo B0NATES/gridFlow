@@ -1,6 +1,18 @@
 // Declara o array global
 var array = [];
 
+// Exemplo: sempre que o array mudar
+function salvarArrayNoLocalStorage() {
+  localStorage.setItem("dadosSistema", JSON.stringify(array));
+  console.log("Dados salvos no localStorage");
+}
+
+// Exemplo: após adicionar um novo registro
+function adicionarRegistro(novoItem) {
+  array.push(novoItem);
+  salvarArrayNoLocalStorage();
+}
+
 // --- Objeto para formatação de moeda ---
 const moeda = {
   formatar(valor) {
@@ -187,6 +199,8 @@ $(document).ready(function () {
     $("#formaPagamento").val('');
 
     atualizarData();
+    salvarArrayNoLocalStorage();
+
   });
 
   // --- Soma geral e exibe saldo ---
@@ -203,3 +217,6 @@ $(document).ready(function () {
   // Define a data inicial
   atualizarData();
 });
+
+
+

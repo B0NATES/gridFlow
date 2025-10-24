@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relatórios</title>
+  <link rel="stylesheet" href="./css/relatorios.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+</head>
+
+<body>
+  <div class="layout">
+    <!-- 🔹 Painel lateral fixo -->
+    <nav class="sidebar">
+      <h2 class="sidebar-title">Menu</h2>
+      <ul>
+        <li><a href="index.html">🏠 <span>Início</span></a></li>
+        <li><a href="relatorios.html" class="active">📊 <span>Relatórios</span></a></li>
+        <li><a href="configuracoes.html">⚙️ <span>Configurações</span></a></li>
+      </ul>
+      
+    </nav>
+
+    <!-- 🔹 Conteúdo principal -->
+    <div class="container-relatorios">
+      <header>
+        <h1>Relatórios de Pagamentos</h1>
+      </header>
+
+      <!-- 🔹 Filtro de datas -->
+      <div class="filtros-container">
+        <label>Data inicial: <input type="date" id="data-inicial"></label>
+        <label>Data final: <input type="date" id="data-final"></label>
+        <button id="btn-filtrar">Filtrar</button>
+        <div class="atalhos">
+          <button class="filtro-rapido" data-periodo="diario">Diário</button>
+          <button class="filtro-rapido" data-periodo="semanal">Semanal</button>
+          <button class="filtro-rapido" data-periodo="mensal">Mensal</button>
+          <button class="filtro-rapido" data-periodo="anual">Anual</button>
+          <button id="btn-limpar">Limpar</button>
+        </div>
+      </div>
+
+      <div id="totais-container">
+        <h2>Total geral: <span id="total-geral">R$ 0,00</span></h2>
+
+        <div class="cards-totais">
+          <div class="card-total especie">
+            💵 <strong>Dinheiro:</strong> <span id="total-especie">R$ 0,00</span>
+          </div>
+          <div class="card-total pix">
+            📱 <strong>Pix:</strong> <span id="total-pix">R$ 0,00</span>
+          </div>
+          <div class="card-total cartao">
+            💳 <strong>Cartão:</strong> <span id="total-cartao">R$ 0,00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 🔹 Totais por período -->
+<div id="analise-consumo">
+  <h2>Análise de Consumo por Período</h2>
+  <table id="tabela-analise">
+    <thead>
+      <tr>
+        <th>Período</th>
+        <th>Energia (kWh)</th>
+        <th>Bebidas (R$)</th>
+        <th>Receita (R$)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Diário</td>
+        <td id="analise-diario-kwh">0</td>
+        <td id="analise-diario-bebidas">R$ 0,00</td>
+        <td id="analise-diario-receita">R$ 0,00</td>
+      </tr>
+      <tr>
+        <td>Semanal</td>
+        <td id="analise-semanal-kwh">0</td>
+        <td id="analise-semanal-bebidas">R$ 0,00</td>
+        <td id="analise-semanal-receita">R$ 0,00</td>
+      </tr>
+      <tr>
+        <td>Mensal</td>
+        <td id="analise-mensal-kwh">0</td>
+        <td id="analise-mensal-bebidas">R$ 0,00</td>
+        <td id="analise-mensal-receita">R$ 0,00</td>
+      </tr>
+      <tr>
+        <td>Anual</td>
+        <td id="analise-anual-kwh">0</td>
+        <td id="analise-anual-bebidas">R$ 0,00</td>
+        <td id="analise-anual-receita">R$ 0,00</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+      <!-- 🔹 Lista de pagamentos (a tabela será gerada aqui pelo JS) -->
+      <div id="relatorio-container"></div>
+
+      <!-- 🔹 Totais -->
+      
+    </div>
+  </div>
+
+  <!-- script corrigido -->
+  <script src="./scripts/relatorios.js"></script>
+</body>
+</html>
