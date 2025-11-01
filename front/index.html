@@ -13,38 +13,45 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@300;500;700&display=swap"
     rel="stylesheet">
-  <script src="./scripts/script.js"></script>
-  <script src="./enablefields.js"></script>
   <title>GridFlow</title>
 </head>
 
 <body>
   <!-- Painel superior -->
-  <div id="panel-heading-heading">
-    <nav class="navbar navbar-dark">
-      <div class="container-fluid">
-        <a id="link-heading" class="navbar-brand d-flex align-items-center" href="#">
-          <img class="img-heading me-2" src="./img/android-chrome-512x512.png" alt="Logo" width="150"
-            height="150">
-          <span class="fs-3 txt-gridFlow">GRID FLOW</span>
+<div id="panel-heading-heading">
+  <nav class="navbar navbar-dark">
+    <div class="container-fluid">
+      <!-- Botão hamburguer -->
+      <button id="btn-menu" class="btn-hamburguer d-lg-none">
+        ☰
+      </button>
+
+      <a id="link-heading" class="navbar-brand d-flex align-items-center" href="#">
+        <img class="img-heading me-2" src="./img/android-chrome-512x512.png" alt="Logo" width="150" height="150">
+        <span class="fs-3 txt-gridFlow">GRID FLOW</span>
+      </a>
+    </div>
+  </nav>
+</div>
+
+<!-- Layout principal -->
+<div class="d-flex" style="height: calc(100vh - 70px);">
+
+  <!-- Painel lateral esquerdo -->
+  <aside class="panel-nav-lateral-esquerdo" id="menu-lateral">
+    <ul class="list-unstyled">
+      <li><span class="icon">🏠</span><span class="label">Início</span></li>
+      <li><span class="icon">⚙️</span><span class="label">Painel de Controle</span></li>
+      <li>
+        <a href="./relatorios.html" class="text-decoration-none text-light">
+          <span class="icon">📊</span><span class="label">Relatórios</span>
         </a>
-      </div>
-    </nav>
-  </div>
+      </li>
+      <li><span class="icon">📅</span><span class="label">Agenda</span></li>
+    </ul>
+  </aside>
 
-  <!-- Layout principal -->
-  <div class="d-flex" style="height: calc(100vh - 70px);">
 
-    <!-- Painel lateral esquerdo -->
-    <aside class="panel-nav-lateral-esquerdo">
-      <ul class="list-unstyled">
-        <li>🏠 Início</li>
-        <li>⚙️ Painel de Controle</li>
-        <li><a href="./relatorios.html" class="text-decoration-none text-light">📊 Relatórios</a></li>
-
-        <li>📅 Agenda</li>
-      </ul>
-    </aside>
 
     <!-- Conteúdo central -->
     <main class="flex-fill p-4 conteudo-central">
@@ -176,5 +183,26 @@
       </div>
     </div>
   </div>
+
+    <!-- scripts existentes -->
+    <script src="./scripts/script.js"></script>
+    <script type="module" src="./api/apiService.js"></script>
+  
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const btnMenu = document.getElementById("btn-menu");
+        const menuLateral = document.getElementById("menu-lateral");
+  
+        if (btnMenu && menuLateral) {
+          btnMenu.addEventListener("click", () => {
+            menuLateral.classList.toggle("aberto");
+            document.body.classList.toggle("menu-aberto");
+          });
+        }
+      });
+    </script>
+  </body>
+  </html>
+  
 </body>
 </html>

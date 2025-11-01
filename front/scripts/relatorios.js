@@ -1,3 +1,4 @@
+import { getRelatorios } from "../api/apiService.js";
 $(document).ready(function () {
 
   // 🔹 Helpers
@@ -24,13 +25,13 @@ $(document).ready(function () {
     return isNaN(n) ? 0 : n;
   }
 
-  function carregarDados() {
-    const dadosSalvos = localStorage.getItem("dadosSistema");
-    return dadosSalvos ? JSON.parse(dadosSalvos) : [];
+  async function carregarDados() {
+    return await getRelatorios();
   }
 
-  function filtrarPorIntervalo(inicioStr, fimStr) {
-    const todos = carregarDados();
+  async function filtrarPorIntervalo(inicioStr, fimStr) {
+    const todos = await carregarDados();
+
     if (!inicioStr && !fimStr) return []; // 🔸 agora retorna vazio se não tiver filtro
 
     const inicio = parseDataParaDate(inicioStr);

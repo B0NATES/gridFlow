@@ -1,64 +1,97 @@
-// Declara o array global
-var array = [];
+import { getRelatorios, addRelatorio } from "../api/apiService.js";
 
-// Exemplo: sempre que o array mudar
-function salvarArrayNoLocalStorage() {
-  localStorage.setItem("dadosSistema", JSON.stringify(array));
-  console.log("Dados salvos no localStorage");
+let array = [];
+
+// =======================
+// 📦 Funções principais
+// =======================
+
+async function carregarArray() {
+  try {
+    array = await getRelatorios();
+  } catch {
+    carregarArrayDoLocalStorage(); // usa o localStorage se o back estiver off
+  }
+  renderizarTabela();
 }
 
-// Exemplo: após adicionar um novo registro
-function adicionarRegistro(novoItem) {
-  array.push(novoItem);
-  salvarArrayNoLocalStorage();
+async function adicionarRegistro(novoItem) {
+  try {
+    await addRelatorio(novoItem);
+    array = await getRelatorios();
+  } catch (err) {
+    console.warn("⚠️ Falha ao enviar para o servidor, salvando localmente.");
+    array.push(novoItem);
+    salvarArrayNoLocalStorage();
+  }
+  renderizarTabela();
 }
 
-// --- Objeto para formatação de moeda ---
+// =======================
+// 💰 Objeto para formatação de moeda
+// =======================
 const moeda = {
   formatar(valor) {
     if (isNaN(valor)) valor = 0;
-    return valor.toLocaleString('pt-BR', {
+    return valor.toLocaleString("pt-BR", {
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      maximumFractionDigits: 2,
     });
   },
 
   desformatar(texto) {
     if (!texto) return 0;
-    return parseFloat(
-      texto
-        .replace(/\./g, '')  // remove pontos de milhar
-        .replace(',', '.')   // troca vírgula por ponto decimal
-    ) || 0;
-  }
+    return (
+      parseFloat(
+        texto.replace(/\./g, "").replace(",", ".") // troca vírgula por ponto decimal
+      ) || 0
+    );
+  },
 };
 
+// =======================
+// 💾 LocalStorage helpers
+// =======================
+function salvarArrayNoLocalStorage() {
+  localStorage.setItem("registros", JSON.stringify(array));
+}
+
+function carregarArrayDoLocalStorage() {
+  const data = localStorage.getItem("registros");
+  if (data) array = JSON.parse(data);
+  else array = [];
+}
+
+// =======================
+// 🧾 Renderizar tabela (deve ficar fora do document.ready)
+// =======================
+function renderizarTabela() {
+  const tbody = $("#table tbody");
+  tbody.empty();
+
+  array.forEach((item) => {
+    const linha = `
+      <tr>
+        <td>${item.data}</td>
+        <td>${item.placa}</td>
+        <td>${item.kwh}</td>
+        <td>${item.refrigerante}</td>
+        <td>${item.valor}</td>
+        <td>${item.formaPagamento}</td>
+      </tr>
+    `;
+    tbody.append(linha);
+  });
+}
+
+// =======================
+// ⚙️ Lógica da interface
+// =======================
 $(document).ready(function () {
-
-  // --- Atualiza campo de data ---
+  // Atualiza campo de data
   function atualizarData() {
-    const date = new Date().toLocaleDateString('pt-BR');
+    const date = new Date().toLocaleDateString("pt-BR");
     $("#data").val(date);
-  }
-
-  // --- Renderiza a tabela ---
-  function renderizarTabela() {
-    const tbody = $("#table tbody");
-    tbody.empty();
-
-    array.forEach(item => {
-      const linha = `
-        <tr>
-          <td>${item.data}</td>
-          <td>${item.placa}</td>
-          <td>${item.kwh}</td>
-          <td>${item.refrigerante}</td>
-          <td>${item.valor}</td>
-          <td>${item.formaPagamento}</td>
-        </tr>
-      `;
-      tbody.append(linha);
-    });
   }
 
   // --- Controle do botão enviar ---
@@ -66,33 +99,33 @@ $(document).ready(function () {
   setTimeout(() => $("#enviar").prop("disabled", false), 1000);
 
   // --- Ações do Modal ---
-  $('#bnt-adicionar-fila').click(function () {
+  $("#bnt-adicionar-fila").click(function () {
     atualizarData();
-    $('#modal-adicionar').fadeIn();
+    $("#modal-adicionar").fadeIn();
   });
 
-  $('#btn-cancelar').click(function () {
-    $("#kwh").val('');
-    $("#txt_consumo").val('');
-    $("#placa").val('');
-    $("#relf").val('');
-    $("#valor").val('');
-    $("#formaPagamento").val('');
+  $("#btn-cancelar").click(function () {
+    $("#kwh").val("");
+    $("#txt_consumo").val("");
+    $("#placa").val("");
+    $("#relf").val("");
+    $("#valor").val("");
+    $("#formaPagamento").val("");
   });
 
   $("#btn-fechar-modal").click(() => {
-    $('#modal-adicionar').fadeOut();
+    $("#modal-adicionar").fadeOut();
   });
 
   $(window).click(function (e) {
-    if ($(e.target).is('#modal-adicionar')) {
-      $('#modal-adicionar').fadeOut();
+    if ($(e.target).is("#modal-adicionar")) {
+      $("#modal-adicionar").fadeOut();
     }
   });
 
   // --- Manipulação do campo #kwh ---
   $("#kwh").on({
-    "blur": () => {
+    blur: () => {
       let val = $("#kwh").val();
       let valNum = moeda.desformatar(val);
       $("#kwh").val(moeda.formatar(valNum));
@@ -100,19 +133,15 @@ $(document).ready(function () {
       let valorAtual = $("#valor").val();
       let consumo = moeda.desformatar($("#txt_consumo").val()) || 0;
 
-      if (valorAtual === '') {
-        let total = valNum * 2;
-        $("#valor").val(moeda.formatar(total));
-      } else {
-        let total = valNum * 2 + consumo;
-        $("#valor").val(moeda.formatar(total));
-      }
-    }
+      let total =
+        valorAtual === "" ? valNum * 2 : valNum * 2 + consumo;
+      $("#valor").val(moeda.formatar(total));
+    },
   });
 
   // --- Manipulação do campo #txt_consumo ---
   $("#txt_consumo").on({
-    "blur": () => {
+    blur: () => {
       let consumoTxt = $("#txt_consumo").val();
       let consumoNum = moeda.desformatar(consumoTxt);
       $("#txt_consumo").val(moeda.formatar(consumoNum));
@@ -120,24 +149,24 @@ $(document).ready(function () {
       let kwhTxt = $("#kwh").val();
       let valorTxt = $("#valor").val();
 
-      if (kwhTxt === '' || moeda.desformatar(kwhTxt) === 0) {
+      if (kwhTxt === "" || moeda.desformatar(kwhTxt) === 0) {
         $("#valor").val(moeda.formatar(consumoNum));
-      } else if (valorTxt !== '') {
+      } else if (valorTxt !== "") {
         let valorAtualNum = moeda.desformatar(valorTxt);
         let total = valorAtualNum + consumoNum;
         $("#valor").val(moeda.formatar(total));
       }
-    }
+    },
   });
 
   // --- Manipula exibição do campo de consumo de bebidas ---
   $("#relf").change(() => {
     let val = $("#relf").val().toUpperCase();
     if (val === "SIM") {
-      $("#txt_valorRefrigerante").css('display', 'block');
+      $("#txt_valorRefrigerante").css("display", "block");
     } else {
-      $("#txt_valorRefrigerante").css('display', 'none');
-      $("#txt_consumo").val('');
+      $("#txt_valorRefrigerante").css("display", "none");
+      $("#txt_consumo").val("");
     }
   });
 
@@ -147,7 +176,7 @@ $(document).ready(function () {
     let placa = $("#placa").val();
 
     let kwhTxt = $("#kwh").val();
-    let kwhNum = moeda.desformatar(kwhTxt) *2;
+    let kwhNum = moeda.desformatar(kwhTxt) * 2;
 
     let refVal = $("#relf").val();
     let consumoTxt = $("#txt_consumo").val();
@@ -159,11 +188,11 @@ $(document).ready(function () {
     let formaPagamento = $("#formaPagamento").val();
 
     // --- Lógica do refrigerante ---
-    let refrigerante = '';
-    if (refVal.toUpperCase() === 'SIM' && consumoNum > 0) {
+    let refrigerante = "";
+    if (refVal.toUpperCase() === "SIM" && consumoNum > 0) {
       refrigerante = moeda.formatar(consumoNum);
     } else {
-      refrigerante = 'NÃO';
+      refrigerante = "NÃO";
     }
 
     // --- Validação ---
@@ -172,35 +201,23 @@ $(document).ready(function () {
       return;
     }
 
-    // --- Adiciona o objeto ao array ---
-    array.push({
+    // --- Adiciona o objeto ---
+    adicionarRegistro({
       data,
       placa,
       kwh: moeda.formatar(kwhNum),
       refrigerante,
       valor: moeda.formatar(valorNum),
-      formaPagamento
+      formaPagamento,
     });
 
-    console.log('✅ Dados adicionados ao array:', array);
+    console.log("✅ Dados adicionados ao array:", array);
 
-    // Atualiza a tabela
-    renderizarTabela();
-
-    // Fecha o modal
-    $('#modal-adicionar').fadeOut();
-
-    // Limpa os campos
-    $("#placa").val('');
-    $("#kwh").val('');
-    $("#valor").val('');
-    $("#relf").val('');
-    $("#txt_consumo").val('');
-    $("#formaPagamento").val('');
-
+    // Fecha modal e limpa campos
+    $("#modal-adicionar").fadeOut();
+    $("#placa, #kwh, #valor, #relf, #txt_consumo, #formaPagamento").val("");
     atualizarData();
     salvarArrayNoLocalStorage();
-
   });
 
   // --- Soma geral e exibe saldo ---
@@ -214,9 +231,7 @@ $(document).ready(function () {
     $("#pSaldo").text(`R$ ${moeda.formatar(totalS)}`);
   });
 
-  // Define a data inicial
+  // Inicializa
   atualizarData();
+  carregarArray();
 });
-
-
-
