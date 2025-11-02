@@ -1,3 +1,4 @@
+// front/scripts/script.js
 import { getRelatorios, addRelatorio } from "../api/apiService.js";
 
 let array = [];
@@ -5,7 +6,6 @@ let array = [];
 // =======================
 // 📦 Funções principais
 // =======================
-
 async function carregarArray() {
   try {
     array = await getRelatorios();
@@ -13,11 +13,13 @@ async function carregarArray() {
     carregarArrayDoLocalStorage(); // usa o localStorage se o back estiver off
   }
   renderizarTabela();
+  atualizarSaldo();
 }
 
 async function adicionarRegistro(novoItem) {
   try {
     await addRelatorio(novoItem);
+    // busca novamente (o endpoint retorna todos os registros)
     array = await getRelatorios();
   } catch (err) {
     console.warn("⚠️ Falha ao enviar para o servidor, salvando localmente.");
@@ -25,6 +27,7 @@ async function adicionarRegistro(novoItem) {
     salvarArrayNoLocalStorage();
   }
   renderizarTabela();
+  atualizarSaldo();
 }
 
 // =======================
@@ -33,19 +36,19 @@ async function adicionarRegistro(novoItem) {
 const moeda = {
   formatar(valor) {
     if (isNaN(valor)) valor = 0;
-    return valor.toLocaleString("pt-BR", {
+    return Number(valor).toLocaleString("pt-BR", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
   },
 
   desformatar(texto) {
-    if (!texto) return 0;
-    return (
-      parseFloat(
-        texto.replace(/\./g, "").replace(",", ".") // troca vírgula por ponto decimal
-      ) || 0
-    );
+    if (texto === undefined || texto === null) return 0;
+    // aceita número ou string formatada (ex: "1.234,56")
+    if (typeof texto === "number") return texto;
+    const clean = texto.toString().replace(/\./g, "").replace(",", ".");
+    const n = parseFloat(clean);
+    return isNaN(n) ? 0 : n;
   },
 };
 
@@ -63,7 +66,7 @@ function carregarArrayDoLocalStorage() {
 }
 
 // =======================
-// 🧾 Renderizar tabela (deve ficar fora do document.ready)
+// 🧾 Renderizar tabela
 // =======================
 function renderizarTabela() {
   const tbody = $("#table tbody");
@@ -85,6 +88,17 @@ function renderizarTabela() {
 }
 
 // =======================
+// 💰 Atualizar saldo
+// =======================
+function atualizarSaldo() {
+  let totalS = 0;
+  for (let i = 0; i < array.length; i++) {
+    totalS += moeda.desformatar(array[i].valor);
+  }
+  $("#pSaldo").text(`R$ ${moeda.formatar(totalS)}`);
+}
+
+// =======================
 // ⚙️ Lógica da interface
 // =======================
 $(document).ready(function () {
@@ -98,11 +112,25 @@ $(document).ready(function () {
   $("#enviar").prop("disabled", true);
   setTimeout(() => $("#enviar").prop("disabled", false), 1000);
 
-  // --- Ações do Modal ---
-  $("#bnt-adicionar-fila").click(function () {
+  // ===========================
+  // 🧩 Controle do Modal (usa classe .mostrar do CSS)
+  // ===========================
+  const modal = $("#modal-adicionar");
+  const body = $("body");
+
+  $("#bnt-adicionar-fila, #btn-adicionar-fila, #btn-adicionar-fila-alt").on("click", function () {
+    // aceitamos alguns ids por compatibilidade (se houver variação)
     atualizarData();
-    $("#modal-adicionar").fadeIn();
+    modal.addClass("mostrar");
+    body.css("overflow", "hidden");
   });
+
+  function fecharModal() {
+    modal.removeClass("mostrar");
+    body.css("overflow", "");
+  }
+
+  $("#btn-fechar-modal").click(fecharModal);
 
   $("#btn-cancelar").click(function () {
     $("#kwh").val("");
@@ -111,35 +139,36 @@ $(document).ready(function () {
     $("#relf").val("");
     $("#valor").val("");
     $("#formaPagamento").val("");
-  });
-
-  $("#btn-fechar-modal").click(() => {
-    $("#modal-adicionar").fadeOut();
+    fecharModal();
   });
 
   $(window).click(function (e) {
     if ($(e.target).is("#modal-adicionar")) {
-      $("#modal-adicionar").fadeOut();
+      fecharModal();
     }
   });
 
-  // --- Manipulação do campo #kwh ---
+  $(document).keydown(function (e) {
+    if (e.key === "Escape" && modal.is(":visible")) {
+      fecharModal();
+    }
+  });
+
+  // ===========================
+  // ⚡ Lógica dos campos (kwh / consumo / valor)
+  // ===========================
   $("#kwh").on({
     blur: () => {
       let val = $("#kwh").val();
       let valNum = moeda.desformatar(val);
       $("#kwh").val(moeda.formatar(valNum));
 
-      let valorAtual = $("#valor").val();
       let consumo = moeda.desformatar($("#txt_consumo").val()) || 0;
-
-      let total =
-        valorAtual === "" ? valNum * 2 : valNum * 2 + consumo;
+      let total = valNum * 2 + consumo; // sua regra: kwh * 2 + consumo
       $("#valor").val(moeda.formatar(total));
     },
   });
 
-  // --- Manipulação do campo #txt_consumo ---
   $("#txt_consumo").on({
     blur: () => {
       let consumoTxt = $("#txt_consumo").val();
@@ -159,9 +188,8 @@ $(document).ready(function () {
     },
   });
 
-  // --- Manipula exibição do campo de consumo de bebidas ---
   $("#relf").change(() => {
-    let val = $("#relf").val().toUpperCase();
+    let val = $("#relf").val() ? $("#relf").val().toString().toUpperCase() : "";
     if (val === "SIM") {
       $("#txt_valorRefrigerante").css("display", "block");
     } else {
@@ -170,13 +198,15 @@ $(document).ready(function () {
     }
   });
 
-  // --- Captura dos dados e adição ao array ---
-  $("#enviar").click(() => {
+  // ===========================
+  // 🧾 Envio do formulário — AGORA AWAIT adiciona e atualiza saldo corretamente
+  // ===========================
+  $("#enviar").off("click").on("click", async () => {
     let data = $("#data").val();
     let placa = $("#placa").val();
 
     let kwhTxt = $("#kwh").val();
-    let kwhNum = moeda.desformatar(kwhTxt) * 2;
+    let kwhNum = moeda.desformatar(kwhTxt) * 2; // regra kwh * 2
 
     let refVal = $("#relf").val();
     let consumoTxt = $("#txt_consumo").val();
@@ -187,51 +217,41 @@ $(document).ready(function () {
 
     let formaPagamento = $("#formaPagamento").val();
 
-    // --- Lógica do refrigerante ---
+    // refrigerante
     let refrigerante = "";
-    if (refVal.toUpperCase() === "SIM" && consumoNum > 0) {
+    if (refVal && refVal.toString().toUpperCase() === "SIM" && consumoNum > 0) {
       refrigerante = moeda.formatar(consumoNum);
     } else {
       refrigerante = "NÃO";
     }
 
-    // --- Validação ---
+    // validação
     if (!placa || kwhNum <= 0 || valorNum <= 0 || !formaPagamento) {
       alert("⚠️ Preencha todos os campos obrigatórios!");
       return;
     }
 
-    // --- Adiciona o objeto ---
-    adicionarRegistro({
+    // prepara objeto (note: estamos guardando os valores formatados em strings — consistente com o que você tinha)
+    const novo = {
       data,
       placa,
       kwh: moeda.formatar(kwhNum),
       refrigerante,
       valor: moeda.formatar(valorNum),
       formaPagamento,
-    });
+    };
 
-    console.log("✅ Dados adicionados ao array:", array);
+    // chama adicionarRegistro e espera a atualização (importante)
+    await adicionarRegistro(novo);
 
-    // Fecha modal e limpa campos
-    $("#modal-adicionar").fadeOut();
+    // fecha e limpa
+    fecharModal();
     $("#placa, #kwh, #valor, #relf, #txt_consumo, #formaPagamento").val("");
     atualizarData();
     salvarArrayNoLocalStorage();
   });
 
-  // --- Soma geral e exibe saldo ---
-  $("#enviar").click(() => {
-    let totalS = 0;
-    for (let i = 0; i < array.length; i++) {
-      const index = moeda.desformatar(array[i].valor);
-      totalS += index;
-    }
-    console.log("TOTAL FINAL: " + totalS);
-    $("#pSaldo").text(`R$ ${moeda.formatar(totalS)}`);
-  });
-
-  // Inicializa
+  // Inicializa data, dados e saldo
   atualizarData();
   carregarArray();
 });

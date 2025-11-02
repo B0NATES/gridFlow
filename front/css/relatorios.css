@@ -19,6 +19,8 @@
     display: flex;
     flex-direction: column;
     box-shadow: 4px 0 10px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    overflow: hidden;
   }
   
   .sidebar-title {
@@ -40,7 +42,9 @@
   }
   
   .sidebar ul li a {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     text-decoration: none;
     color: #e2e8f0;
     font-weight: 500;
@@ -61,15 +65,15 @@
     font-weight: 600;
   }
   
+  /* ==============================
+     CONTAINER PRINCIPAL
+     ============================== */
   .container-relatorios {
     margin-left: 240px;
     padding: 30px;
     flex: 1;
   }
   
-  /* ==============================
-     CABEÇALHOS E BASE
-     ============================== */
   body {
     font-family: "Inter", "Segoe UI", Roboto, sans-serif;
     color: #1e293b;
@@ -175,140 +179,6 @@
      CARDS DE TOTAIS
      ============================== */
   #totais-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-top: 24px;
-    justify-content: center;
-  }
-  
-  .card-total {
-    flex: 1;
-    min-width: 180px;
-    padding: 16px 20px;
-    border-radius: 12px;
-    text-align: center;
-    color: #fff;
-    font-weight: 500;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-  }
-  
-  .card-total:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
-  }
-  
-  /* ==== Cores dos cartões (corrigidas e mais vibrantes) ==== */
-.card-total.dinheiro {
-  background: linear-gradient(135deg, #047857, #10b981);
-  color: #ffffff;
-}
-
-.card-total.pix {
-  background: linear-gradient(135deg, #1d4ed8, #3b82f6);
-  color: #ffffff;
-}
-
-.card-total.cartao {
-  background: linear-gradient(135deg, #c2410c, #f97316);
-  color: #ffffff;
-}
-
-.card-total.total {
-  background: linear-gradient(135deg, #6d28d9, #8b5cf6);
-  color: #ffffff;
-}
-
-.card-total span {
-  font-size: 1.1rem;
-  margin-right: 6px;
-  vertical-align: middle;
-}
-
-.card-total.especie {
-  background: linear-gradient(135deg, #047857, #10b981);
-  color: #ffffff;
-}
-
-
-  /* ==============================
-     SEÇÕES DE RESUMO E ANÁLISE
-     ============================== */
-  #resumo-consumo, #analise-consumo {
-    background: #fff;
-    margin-top: 30px;
-    padding: 20px 24px;
-    border-radius: 12px;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
-  }
-  
-  #analise-consumo {
-    border-left: 5px solid #22c55e;
-  }
-  
-  #resumo-consumo {
-    border-left: 5px solid #2563eb;
-  }
-  
-  /* ==============================
-     RESPONSIVIDADE
-     ============================== */
-  @media (max-width: 768px) {
-    .sidebar {
-      position: relative;
-      width: 100%;
-      flex-direction: row;
-      justify-content: space-around;
-      box-shadow: none;
-    }
-  
-    .container-relatorios {
-      margin-left: 0;
-      padding: 20px;
-    }
-  
-    #totais-container {
-      flex-direction: column;
-      align-items: center;
-    }
-  
-    .card-total {
-      width: 90%;
-    }
-  }
-  
-  /* ===== ESTADO INICIAL - SEM DADOS ===== */
-.sem-dados {
-  text-align: center;
-  padding: 80px 20px;
-  color: #666;
-  font-size: 1.2rem;
-  font-weight: 500;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  opacity: 0.8;
-}
-
-.sem-dados i {
-  font-size: 3rem;
-  color: #007bff;
-  animation: pulse 2s infinite ease-in-out;
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); opacity: 0.6; }
-  50% { transform: scale(1.15); opacity: 1; }
-  100% { transform: scale(1); opacity: 0.6; }
-}
-
-/* ==============================
-   CARDS DE TOTAIS
-   ============================== */
-   #totais-container {
     margin-top: 30px;
     background: #ffffff;
     border-radius: 16px;
@@ -342,11 +212,11 @@
     padding: 14px 20px;
     border-radius: 12px;
     text-align: center;
-    color: #fff;
     font-weight: 600;
     font-size: 1rem;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
     transition: all 0.25s ease;
+    color: #ffffff !important; /* 🔹 texto sempre branco */
   }
   
   .card-total:hover {
@@ -354,114 +224,143 @@
     box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
   }
   
-  /* Cores dos cartões */
-  .card-total.especie {
-    background: linear-gradient(135deg, #10b981, #059669);
-  }
-  .card-total.pix {
-    background: linear-gradient(135deg, #2563eb, #3b82f6);
-  }
-  .card-total.cartao {
-    background: linear-gradient(135deg, #f97316, #ea580c);
+  .card-total strong, 
+  .card-total span {
+    color: #ffffff !important;
   }
   
-  /* Responsividade */
-  @media (max-width: 768px) {
-    #totais-container h2 {
-      font-size: 1.2rem;
+  .card-total.especie {
+    background: linear-gradient(135deg, #047857, #10b981);
+  }
+  .card-total.pix {
+    background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+  }
+  .card-total.cartao {
+    background: linear-gradient(135deg, #c2410c, #f97316);
+  }
+  .card-total.geral {
+    background: linear-gradient(135deg, #6d28d9, #8b5cf6);
+  }
+  
+  /* ==============================
+     SEÇÕES DE RESUMO E ANÁLISE
+     ============================== */
+  #resumo-consumo, #analise-consumo {
+    background: #fff;
+    margin-top: 30px;
+    padding: 20px 24px;
+    border-radius: 12px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  }
+  
+  #analise-consumo { border-left: 5px solid #22c55e; }
+  #resumo-consumo { border-left: 5px solid #2563eb; }
+  
+  /* ==============================
+     ESTADO INICIAL - SEM DADOS
+     ============================== */
+  .sem-dados {
+    text-align: center;
+    padding: 80px 20px;
+    color: #666;
+    font-size: 1.2rem;
+    font-weight: 500;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    opacity: 0.8;
+  }
+  
+  .sem-dados i {
+    font-size: 3rem;
+    color: #007bff;
+    animation: pulse 2s infinite ease-in-out;
+  }
+  
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); opacity: 0.6; }
+  }
+  
+  /* ==============================
+     MENU LATERAL RESPONSIVO
+     ============================== */
+  @media (max-width: 900px) {
+    .sidebar {
+      width: 70px;
+      padding: 25px 5px 15px 5px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 14px;
     }
+  
+    .sidebar-title {
+      display: none;
+    }
+  
+    .sidebar ul li {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+  
+    .sidebar ul li a {
+      justify-content: center;
+      font-size: 1.4rem;
+      padding: 10px;
+    }
+  
+    .sidebar ul li a span {
+      display: none;
+    }
+  
+    .sidebar:hover {
+      width: 220px;
+      padding: 20px;
+      align-items: flex-start;
+    }
+  
+    .sidebar:hover ul li a span {
+      display: inline;
+      font-size: 0.95rem;
+      animation: fadeIn 0.3s ease;
+    }
+  
+    .sidebar:hover ul li a {
+      justify-content: flex-start;
+      gap: 10px;
+    }
+  
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(-5px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+  }
+  
+  /* ==============================
+     RESPONSIVIDADE GERAL
+     ============================== */
+  @media (max-width: 768px) {
+    .container-relatorios {
+      margin-left: 0;
+      padding: 20px;
+    }
+  
     .cards-totais {
       flex-direction: column;
       align-items: center;
     }
+  
     .card-total {
       width: 90%;
     }
+  
+    #totais-container h2 {
+      font-size: 1.2rem;
+    }
   }
-
-  /* ==============================
-   MENU LATERAL RESPONSIVO
-   ============================== */
-
-/* Estado padrão (desktop) */
-.sidebar {
-  width: 220px;
-  transition: all 0.3s ease;
-  overflow: hidden;
-}
-
-/* Ícones no menu */
-.sidebar ul li a {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.95rem;
-  white-space: nowrap;
-}
-
-/* Quando a tela for pequena, o menu encolhe */
-@media (max-width: 900px) {
-  .sidebar {
-    width: 70px;
-    padding: 25px 5px 15px 5px; /* 🔹 aumenta o topo levemente */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 14px; /* 🔹 pequeno espaçamento entre ícones */
-    transition: all 0.3s ease;
-  }
-
-  .sidebar-title {
-    display: none;
-  }
-
-  .sidebar ul {
-    width: 100%;
-    padding: 0;
-    margin: 0;
-  }
-
-  .sidebar ul li {
-    width: 100%;
-    text-align: center;
-    margin-bottom: 12px;
-  }
-
-  .sidebar ul li a {
-    justify-content: center;
-    font-size: 1.4rem;
-    padding: 10px;
-  }
-
-  .sidebar ul li a span {
-    display: none;
-  }
-
-  /* 🔹 Efeito hover suave e elegante */
-  .sidebar:hover {
-    width: 220px;
-    padding: 20px;
-    align-items: flex-start;
-  }
-
-  .sidebar:hover ul li a span {
-    display: inline;
-    font-size: 0.95rem;
-    animation: fadeIn 0.3s ease;
-  }
-
-  .sidebar:hover ul li a {
-    justify-content: flex-start;
-    gap: 10px;
-  }
-}
-
-/* 🔹 Animação suave ao expandir texto */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateX(-5px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-
   

@@ -1,6 +1,6 @@
 // front/api/apiService.js
 
-const API_BASE_URL = "http://localhost:3000"; // ajustaremos se o back usar outra porta
+const API_BASE_URL = "http://localhost:4000"; // ajustaremos se o back usar outra porta
 
 // Buscar todos os relatórios
 export async function getRelatorios() {
