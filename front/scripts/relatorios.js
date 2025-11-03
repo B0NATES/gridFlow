@@ -3,7 +3,18 @@ import { getRelatorios } from "../api/apiService.js";
 
 // ----------------- helpers -----------------
 function formatarMoedaNumero(valor) {
-  return "R$ " + Number(valor).toFixed(2).replace(".", ",");
+  const numero = parseFloat(valor) || 0;
+  return numero.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
+}
+
+function formatarDataBR(dataStr) {
+  if (!dataStr) return "—";
+  const data = new Date(dataStr);
+  if (isNaN(data)) return "—";
+  return data.toLocaleDateString("pt-BR", { timeZone: "UTC" });
 }
 
 function parseDataParaDate(dataStr) {
@@ -21,7 +32,7 @@ function parseDataParaDate(dataStr) {
 function moedaDesformatar(texto) {
   if (!texto) return 0;
   if (typeof texto === "number") return texto;
-  const clean = texto.toString().replace(/\./g, "").replace(",", ".");
+  const clean = texto.toString().replace(/[R$\s\.]/g, "").replace(",", ".");
   const n = parseFloat(clean);
   return isNaN(n) ? 0 : n;
 }
@@ -33,7 +44,15 @@ async function carregarDadosDoServidorOuLocal() {
     if (Array.isArray(dados)) return dados;
     return [];
   } catch (err) {
-    console.warn("Não foi possível carregar do servidor, usando localStorage:", err);
+    console.warn("Não foi possível carregar do servidor:", err);
+
+    // se token expirou → redireciona
+    if (err.message.includes("401")) {
+      localStorage.removeItem("token");
+      window.location.href = "login.html";
+      return [];
+    }
+
     const local = localStorage.getItem("registros");
     return local ? JSON.parse(local) : [];
   }
@@ -41,7 +60,7 @@ async function carregarDadosDoServidorOuLocal() {
 
 // ----------------- filtrar (síncrono, recebe lista) -----------------
 function filtrarListaPorIntervalo(lista, inicioStr, fimStr) {
-  if (!inicioStr && !fimStr) return []; // sem filtro = vazio (comportamento desejado)
+  if (!inicioStr && !fimStr) return [];
   const inicio = parseDataParaDate(inicioStr);
   const fim = parseDataParaDate(fimStr);
   if (inicio) inicio.setHours(0, 0, 0, 0);
@@ -81,26 +100,27 @@ function construirTabela(dados) {
 
   dados.forEach(item => {
     const valor = moedaDesformatar(item.valor);
-    const forma = (item.formaPagamento || "").toLowerCase().trim();
-    const kwh = (parseFloat(item.kwh) || 0) / 2;
+    const forma = (item.forma_pagamento || "—").trim();
+    const formaLower = forma.toLowerCase();
+    const kwh = parseFloat(item.kwh) || 0;
     const refri = parseFloat(item.refrigerante) || 0;
 
     totalGeral += valor;
     totalKwh += kwh;
     totalBebidas += refri;
 
-    if (forma === "dinheiro") totalDinheiro += valor;
-    else if (forma === "pix") totalPix += valor;
-    else if (forma === "cartao" || forma === "cartão") totalCartao += valor;
+    if (formaLower === "dinheiro") totalDinheiro += valor;
+    else if (formaLower === "pix") totalPix += valor;
+    else if (formaLower === "cartao" || formaLower === "cartão") totalCartao += valor;
 
     html += `
       <tr>
-        <td>${item.data}</td>
+        <td>${formatarDataBR(item.data)}</td>
         <td>${item.placa}</td>
-        <td>${kwh}</td>
+        <td>${kwh.toFixed(2)}</td>
         <td>${formatarMoedaNumero(refri)}</td>
         <td>${formatarMoedaNumero(valor)}</td>
-        <td>${item.formaPagamento}</td>
+        <td>${forma}</td>
       </tr>
     `;
   });
@@ -110,7 +130,7 @@ function construirTabela(dados) {
       <tfoot>
         <tr>
           <td colspan="2"><strong>Totais:</strong></td>
-          <td>${totalKwh}</td>
+          <td>${totalKwh.toFixed(2)}</td>
           <td>${formatarMoedaNumero(totalBebidas)}</td>
           <td>${formatarMoedaNumero(totalGeral)}</td>
           <td></td>
@@ -134,7 +154,7 @@ function renderResumo(kwh, bebidas, receita) {
   const html = `
     <div class="resumo-container">
       <h3>📊 Resumo do Consumo</h3>
-      <p>⚡ <strong>Energia Total:</strong> ${kwh} kWh</p>
+      <p>⚡ <strong>Energia Total:</strong> ${kwh.toFixed(2)} kWh</p>
       <p>🥤 <strong>Valor Total em Bebidas:</strong> ${formatarMoedaNumero(bebidas)}</p>
       <p>💰 <strong>Receita Total:</strong> ${formatarMoedaNumero(receita)}</p>
     </div>
@@ -142,57 +162,11 @@ function renderResumo(kwh, bebidas, receita) {
   $("#resumo-consumo").html(html);
 }
 
-function renderAnalisePorPeriodos(lista) {
-  // cria períodos baseados em hoje
-  const agora = new Date();
-  const hojeStr = agora.toLocaleDateString("pt-BR");
-
-  const periodos = {
-    diario: { inicio: hojeStr, fim: hojeStr },
-    semanal: { inicio: toInputDate(addDays(agora, -6)), fim: toInputDate(agora) },
-    mensal: { inicio: toInputDate(addMonths(agora, -1)), fim: toInputDate(agora) },
-    anual: { inicio: toInputDate(addYears(agora, -1)), fim: toInputDate(agora) }
-  };
-
-  let html = `
-    <h3>📈 Análise de Consumo por Período</h3>
-    <table class="tabela-analise">
-      <thead>
-        <tr>
-          <th>Período</th><th>Energia (kWh)</th><th>Bebidas (R$)</th><th>Receita (R$)</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
-
-  Object.keys(periodos).forEach(chave => {
-    const { inicio, fim } = periodos[chave];
-    const arr = filtrarListaPorIntervalo(lista, inicio, fim);
-    let kwh = 0, bebidas = 0, receita = 0;
-    arr.forEach(item => {
-      kwh += (parseFloat(item.kwh) || 0) / 2;
-      bebidas += parseFloat(item.refrigerante) || 0;
-      receita += moedaDesformatar(item.valor);
-    });
-    html += `
-      <tr>
-        <td>${chave.charAt(0).toUpperCase() + chave.slice(1)}</td>
-        <td>${kwh}</td>
-        <td>${formatarMoedaNumero(bebidas)}</td>
-        <td>${formatarMoedaNumero(receita)}</td>
-      </tr>
-    `;
-  });
-
-  html += `</tbody></table>`;
-  $("#analise-consumo").html(html);
-}
-
 // ----------------- util datas -----------------
 function toInputDate(d) {
   const yy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
   return `${yy}-${mm}-${dd}`;
 }
 function addDays(d, n) { const nd = new Date(d); nd.setDate(nd.getDate() + n); return nd; }
@@ -201,30 +175,22 @@ function addYears(d, n) { const nd = new Date(d); nd.setFullYear(nd.getFullYear(
 
 // ----------------- render geral (async) -----------------
 async function renderTudo(inicio, fim) {
+  $("#relatorio-container").html("<p>🔄 Carregando dados...</p>");
   const todos = await carregarDadosDoServidorOuLocal();
   const filtrados = filtrarListaPorIntervalo(todos, inicio, fim);
 
   if (!inicio || !fim || filtrados.length === 0) {
     $("#relatorio-container").html("<p>Nenhum dado encontrado.</p>");
-    $("#analise-consumo").html("");
     $("#resumo-consumo").html("");
     $("#total-geral, #total-especie, #total-pix, #total-cartao").text("R$ 0,00");
     return;
   }
 
   $("#relatorio-container").html(construirTabela(filtrados));
-  renderAnalisePorPeriodos(filtrados);
 }
 
 // ----------------- eventos e inicialização -----------------
 $(document).ready(function () {
-  // cria containers se não existirem
-  if (!$("#analise-consumo").length)
-    $("<div id='analise-consumo'></div>").insertBefore("#relatorio-container");
-  if (!$("#resumo-consumo").length)
-    $("<div id='resumo-consumo'></div>").insertAfter("#totais-container");
-
-  // mensagem inicial
   $("#relatorio-container").html(`
     <div class="sem-dados">
       <i>📊</i>
@@ -232,7 +198,6 @@ $(document).ready(function () {
     </div>
   `);
 
-  // filtro
   $("#btn-filtrar").on("click", async function () {
     const inicio = $("#data-inicial").val();
     const fim = $("#data-final").val();
@@ -243,7 +208,6 @@ $(document).ready(function () {
     await renderTudo(inicio, fim);
   });
 
-  // filtros rápidos
   $(".filtro-rapido").on("click", async function () {
     const periodo = $(this).data("periodo");
     const hoje = new Date();
@@ -260,11 +224,8 @@ $(document).ready(function () {
   });
 
   $("#btn-limpar").on("click", function () {
-    $("#data-inicial").val('');
-    $("#data-final").val('');
-    $("#relatorio-container").html("");
-    $("#analise-consumo").html("");
-    $("#resumo-consumo").html("");
+    $("#data-inicial, #data-final").val("");
+    $("#relatorio-container, #resumo-consumo").html("");
     $("#total-geral, #total-especie, #total-pix, #total-cartao").text("R$ 0,00");
   });
 });

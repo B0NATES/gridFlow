@@ -1,4 +1,3 @@
-// front/scripts/script.js
 import { getRelatorios, addRelatorio } from "../api/apiService.js";
 
 let array = [];
@@ -19,7 +18,6 @@ async function carregarArray() {
 async function adicionarRegistro(novoItem) {
   try {
     await addRelatorio(novoItem);
-    // busca novamente (o endpoint retorna todos os registros)
     array = await getRelatorios();
   } catch (err) {
     console.warn("⚠️ Falha ao enviar para o servidor, salvando localmente.");
@@ -31,7 +29,7 @@ async function adicionarRegistro(novoItem) {
 }
 
 // =======================
-// 💰 Objeto para formatação de moeda
+// 💰 Formatação de moeda
 // =======================
 const moeda = {
   formatar(valor) {
@@ -41,10 +39,8 @@ const moeda = {
       maximumFractionDigits: 2,
     });
   },
-
   desformatar(texto) {
     if (texto === undefined || texto === null) return 0;
-    // aceita número ou string formatada (ex: "1.234,56")
     if (typeof texto === "number") return texto;
     const clean = texto.toString().replace(/\./g, "").replace(",", ".");
     const n = parseFloat(clean);
@@ -61,8 +57,31 @@ function salvarArrayNoLocalStorage() {
 
 function carregarArrayDoLocalStorage() {
   const data = localStorage.getItem("registros");
-  if (data) array = JSON.parse(data);
-  else array = [];
+  array = data ? JSON.parse(data) : [];
+}
+
+// =======================
+// 🗓️ Função de formatação de data
+// =======================
+function formatarData(dataISO) {
+  if (!dataISO) return "-";
+
+  // Se vier em formato ISO com 'T'
+  if (dataISO.includes("T")) {
+    const date = new Date(dataISO);
+    const dia = String(date.getDate()).padStart(2, "0");
+    const mes = String(date.getMonth() + 1).padStart(2, "0");
+    const ano = date.getFullYear();
+    return `${dia}/${mes}/${ano}`;
+  }
+
+  // Se vier no formato "YYYY-MM-DD"
+  if (dataISO.includes("-")) {
+    const [ano, mes, dia] = dataISO.split("-");
+    return `${dia}/${mes}/${ano}`;
+  }
+
+  return dataISO;
 }
 
 // =======================
@@ -73,14 +92,25 @@ function renderizarTabela() {
   tbody.empty();
 
   array.forEach((item) => {
+    const dataFormatada = formatarData(item.data);
+
+    const formaPag = item.forma_pagamento || item.formaPagamento || "-";
+    const ref = item.refrigerante
+      ? (isNaN(item.refrigerante)
+          ? item.refrigerante
+          : moeda.formatar(item.refrigerante))
+      : "0,00";
+
+    const valorFmt = `R$ ${moeda.formatar(item.valor)}`;
+
     const linha = `
       <tr>
-        <td>${item.data}</td>
-        <td>${item.placa}</td>
-        <td>${item.kwh}</td>
-        <td>${item.refrigerante}</td>
-        <td>${item.valor}</td>
-        <td>${item.formaPagamento}</td>
+        <td>${dataFormatada}</td>
+        <td>${item.placa || "-"}</td>
+        <td>${moeda.formatar(item.kwh)}</td>
+        <td>${ref}</td>
+        <td>${valorFmt}</td>
+        <td>${formaPag.charAt(0).toUpperCase() + formaPag.slice(1)}</td>
       </tr>
     `;
     tbody.append(linha);
@@ -102,10 +132,13 @@ function atualizarSaldo() {
 // ⚙️ Lógica da interface
 // =======================
 $(document).ready(function () {
-  // Atualiza campo de data
+  // Atualiza campo de data (formato DD/MM/YYYY)
   function atualizarData() {
-    const date = new Date().toLocaleDateString("pt-BR");
-    $("#data").val(date);
+    const dataAtual = new Date();
+    const dia = String(dataAtual.getDate()).padStart(2, "0");
+    const mes = String(dataAtual.getMonth() + 1).padStart(2, "0");
+    const ano = dataAtual.getFullYear();
+    $("#data").val(`${dia}/${mes}/${ano}`);
   }
 
   // --- Controle do botão enviar ---
@@ -113,13 +146,12 @@ $(document).ready(function () {
   setTimeout(() => $("#enviar").prop("disabled", false), 1000);
 
   // ===========================
-  // 🧩 Controle do Modal (usa classe .mostrar do CSS)
+  // 🧩 Controle do Modal
   // ===========================
   const modal = $("#modal-adicionar");
   const body = $("body");
 
   $("#bnt-adicionar-fila, #btn-adicionar-fila, #btn-adicionar-fila-alt").on("click", function () {
-    // aceitamos alguns ids por compatibilidade (se houver variação)
     atualizarData();
     modal.addClass("mostrar");
     body.css("overflow", "hidden");
@@ -133,122 +165,103 @@ $(document).ready(function () {
   $("#btn-fechar-modal").click(fecharModal);
 
   $("#btn-cancelar").click(function () {
-    $("#kwh").val("");
-    $("#txt_consumo").val("");
-    $("#placa").val("");
-    $("#relf").val("");
-    $("#valor").val("");
-    $("#formaPagamento").val("");
+    $("#kwh, #txt_consumo, #placa, #relf, #valor, #formaPagamento").val("");
     fecharModal();
   });
 
   $(window).click(function (e) {
-    if ($(e.target).is("#modal-adicionar")) {
-      fecharModal();
-    }
+    if ($(e.target).is("#modal-adicionar")) fecharModal();
   });
 
   $(document).keydown(function (e) {
-    if (e.key === "Escape" && modal.is(":visible")) {
-      fecharModal();
-    }
+    if (e.key === "Escape" && modal.is(":visible")) fecharModal();
   });
 
   // ===========================
-  // ⚡ Lógica dos campos (kwh / consumo / valor)
+  // ⚡ Lógica dos campos
   // ===========================
-  $("#kwh").on({
-    blur: () => {
-      let val = $("#kwh").val();
-      let valNum = moeda.desformatar(val);
-      $("#kwh").val(moeda.formatar(valNum));
-
-      let consumo = moeda.desformatar($("#txt_consumo").val()) || 0;
-      let total = valNum * 2 + consumo; // sua regra: kwh * 2 + consumo
-      $("#valor").val(moeda.formatar(total));
-    },
+  $("#kwh").on("blur", () => {
+    let val = moeda.desformatar($("#kwh").val());
+    $("#kwh").val(moeda.formatar(val));
+    let consumo = moeda.desformatar($("#txt_consumo").val()) || 0;
+    let total = val * 2 + consumo; // regra de cálculo
+    $("#valor").val(moeda.formatar(total));
   });
 
-  $("#txt_consumo").on({
-    blur: () => {
-      let consumoTxt = $("#txt_consumo").val();
-      let consumoNum = moeda.desformatar(consumoTxt);
-      $("#txt_consumo").val(moeda.formatar(consumoNum));
-
-      let kwhTxt = $("#kwh").val();
-      let valorTxt = $("#valor").val();
-
-      if (kwhTxt === "" || moeda.desformatar(kwhTxt) === 0) {
-        $("#valor").val(moeda.formatar(consumoNum));
-      } else if (valorTxt !== "") {
-        let valorAtualNum = moeda.desformatar(valorTxt);
-        let total = valorAtualNum + consumoNum;
-        $("#valor").val(moeda.formatar(total));
-      }
-    },
+  $("#txt_consumo").on("blur", () => {
+    let consumoNum = moeda.desformatar($("#txt_consumo").val());
+    $("#txt_consumo").val(moeda.formatar(consumoNum));
+    let kwhNum = moeda.desformatar($("#kwh").val());
+    let total = kwhNum * 2 + consumoNum;
+    $("#valor").val(moeda.formatar(total));
   });
 
   $("#relf").change(() => {
-    let val = $("#relf").val() ? $("#relf").val().toString().toUpperCase() : "";
-    if (val === "SIM") {
-      $("#txt_valorRefrigerante").css("display", "block");
-    } else {
-      $("#txt_valorRefrigerante").css("display", "none");
+    let val = $("#relf").val()?.toString().toUpperCase() || "";
+    if (val === "SIM") $("#txt_valorRefrigerante").show();
+    else {
+      $("#txt_valorRefrigerante").hide();
       $("#txt_consumo").val("");
     }
   });
 
   // ===========================
-  // 🧾 Envio do formulário — AGORA AWAIT adiciona e atualiza saldo corretamente
+  // 🧾 Envio do formulário
   // ===========================
   $("#enviar").off("click").on("click", async () => {
     let data = $("#data").val();
     let placa = $("#placa").val();
 
-    let kwhTxt = $("#kwh").val();
-    let kwhNum = moeda.desformatar(kwhTxt) * 2; // regra kwh * 2
-
-    let refVal = $("#relf").val();
-    let consumoTxt = $("#txt_consumo").val();
-    let consumoNum = moeda.desformatar(consumoTxt);
-
-    let valorTxt = $("#valor").val();
-    let valorNum = moeda.desformatar(valorTxt);
-
+    let kwhNum = moeda.desformatar($("#kwh").val());
+    let consumoNum = moeda.desformatar($("#txt_consumo").val());
+    let valorTotal = kwhNum * 2 + consumoNum;
     let formaPagamento = $("#formaPagamento").val();
 
-    // refrigerante
-    let refrigerante = "";
-    if (refVal && refVal.toString().toUpperCase() === "SIM" && consumoNum > 0) {
-      refrigerante = moeda.formatar(consumoNum);
-    } else {
-      refrigerante = "NÃO";
-    }
-
-    // validação
-    if (!placa || kwhNum <= 0 || valorNum <= 0 || !formaPagamento) {
+    if (!placa || kwhNum <= 0 || valorTotal <= 0 || !formaPagamento) {
       alert("⚠️ Preencha todos os campos obrigatórios!");
       return;
     }
 
-    // prepara objeto (note: estamos guardando os valores formatados em strings — consistente com o que você tinha)
+    // Converte data para formato ISO (YYYY-MM-DD)
+    const [dia, mes, ano] = data.split("/");
+    const dataFormatada = `${ano}-${mes}-${dia}`;
+
     const novo = {
-      data,
+      data: dataFormatada,
       placa,
-      kwh: moeda.formatar(kwhNum),
-      refrigerante,
-      valor: moeda.formatar(valorNum),
-      formaPagamento,
+      kwh: parseFloat(kwhNum.toFixed(2)),
+      refrigerante: parseFloat(consumoNum.toFixed(2)) || 0,
+      valor: parseFloat(valorTotal.toFixed(2)),
+      forma_pagamento: formaPagamento,
     };
 
-    // chama adicionarRegistro e espera a atualização (importante)
     await adicionarRegistro(novo);
 
-    // fecha e limpa
     fecharModal();
     $("#placa, #kwh, #valor, #relf, #txt_consumo, #formaPagamento").val("");
     atualizarData();
     salvarArrayNoLocalStorage();
+  });
+
+  // Lógica para abrir e fechar o menu lateral
+  $("#btn-menu").on("click", function () {
+    const menu = $("#menu-lateral");
+
+    if (menu.hasClass("aberto")) {
+      menu.removeClass("aberto");
+      $("body").removeClass("menu-aberto"); // Remove a sobrecapa
+    } else {
+      menu.addClass("aberto");
+      $("body").addClass("menu-aberto"); // Adiciona a sobrecapa
+    }
+  });
+
+  // Lógica para fechar o menu quando clicar fora
+  $(window).click(function (e) {
+    if (!$(e.target).closest("#menu-lateral").length && !$(e.target).is("#btn-menu")) {
+      $("#menu-lateral").removeClass("aberto");
+      $("body").removeClass("menu-aberto");
+    }
   });
 
   // Inicializa data, dados e saldo

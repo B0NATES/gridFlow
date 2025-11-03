@@ -1,35 +1,46 @@
-import bcrypt from 'bcrypt';
-import db from '../db/connection.js';
-import { generateToken } from '../utils/token.js';
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import db from "../db/connection.js"; // usa knex
 
-export async function register(req, res) {
-  const { name, email, password } = req.body;
+const JWT_SECRET = process.env.JWT_SECRET || "segredo_super_secreto";
 
-  if (!name || !email || !password)
-    return res.status(400).json({ error: 'Preencha todos os campos.' });
+export const login = async (req, res) => {
+  const { email, senha } = req.body;
 
-  const existing = await db('users').where({ email }).first();
-  if (existing) return res.status(400).json({ error: 'E-mail já registrado.' });
+  try {
+    const usuario = await db("users").where({ email }).first();
 
-  const hash = await bcrypt.hash(password, 10);
+    if (!usuario) {
+      return res.status(401).json({ error: "Usuário não encontrado" });
+    }
 
-  const [user] = await db('users')
-    .insert({ name, email, password_hash: hash })
-    .returning(['id', 'name', 'email', 'role']);
+    console.log("Usuário encontrado:", usuario);
 
-  const token = generateToken(user);
-  res.json({ user, token });
-}
+    const senhaCorreta = await bcrypt.compare(senha, usuario.password_hash);
 
-export async function login(req, res) {
-  const { email, password } = req.body;
+    if (!senhaCorreta) {
+      console.log("Senha incorreta para:", email);
+      return res.status(401).json({ error: "Senha incorreta" });
+    }
 
-  const user = await db('users').where({ email }).first();
-  if (!user) return res.status(400).json({ error: 'Usuário não encontrado.' });
+    const token = jwt.sign(
+      { id: usuario.id, email: usuario.email, role: usuario.role },
+      JWT_SECRET,
+      { expiresIn: "8h" }
+    );
 
-  const valid = await bcrypt.compare(password, user.password_hash);
-  if (!valid) return res.status(400).json({ error: 'Senha incorreta.' });
-
-  const token = generateToken(user);
-  res.json({ user, token });
-}
+    res.json({
+      message: "Login realizado com sucesso!",
+      token,
+      usuario: {
+        id: usuario.id,
+        nome: usuario.name,
+        email: usuario.email,
+        role: usuario.role
+      }
+    });
+  } catch (error) {
+    console.error("Erro ao realizar login:", error);
+    res.status(500).json({ error: "Erro interno no servidor" });
+  }
+};
