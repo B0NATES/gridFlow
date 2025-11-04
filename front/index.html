@@ -13,77 +13,89 @@
 
 <body>
   <!-- Painel superior -->
-  <nav class="navbar navbar-dark" id="panel-heading-heading">
-    <div class="container-fluid">
-      <button id="btn-menu" class="btn-hamburguer d-lg-none">☰</button>
-      <a id="link-heading" class="navbar-brand d-flex align-items-center" href="#">
-        <img class="img-heading me-2" src="./img/android-chrome-512x512.png" alt="Logo" width="150" height="150">
-        <span class="fs-3 txt-gridFlow">GRID FLOW</span>
-      </a>
+  <nav class="navbar navbar-dark shadow-sm" id="panel-heading-heading">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        <button id="btn-menu" class="btn-hamburguer d-lg-none">☰</button>
+        <a id="link-heading" class="navbar-brand d-flex align-items-center gap-2" href="#">
+          <img class="img-heading" src="./img/android-chrome-512x512.png" alt="Logo">
+          <span class="txt-gridFlow">GRID FLOW</span>
+        </a>
+      </div>
+      <div class="text-light small fw-semibold me-2">Bem-vindo, <span id="usuario-nome">admin</span></div>
     </div>
   </nav>
 
   <!-- Layout principal -->
-  <div class="d-flex" style="height: calc(100vh - 70px);">
+  <div class="d-flex flex-nowrap layout-principal">
     <!-- Painel lateral esquerdo -->
     <aside class="panel-nav-lateral-esquerdo" id="menu-lateral">
-      <ul class="list-unstyled">
-        <li><span class="icon">🏠</span><span class="label">Início</span></li>
-        <li><span class="icon">⚙️</span><span class="label">Painel de Controle</span></li>
+      <ul class="list-unstyled mt-3">
+        <li><span class="icon">🏠</span><span class="label"></span></li>
+        <li><span class="icon">⚙️</span><span class="label"></span></li>
         <li><a href="./relatorios.html" class="text-decoration-none text-light"><span class="icon">📊</span><span class="label">Relatórios</span></a></li>
-        <li><span class="icon">📅</span><span class="label">Agenda</span></li>
+        <li><span class="icon">📅</span><span class="label"></span></li>
       </ul>
     </aside>
 
     <!-- Conteúdo central -->
-    <main class="flex-fill p-4 conteudo-central">
-      <h2 class="fw-bold mb-3">GRID FLOW</h2>
-      <p>Bem-vindo <strong>login</strong>!</p>
-
-      <div class="mt-4 mb-3 d-flex gap-2">
-        <button id="bnt-adicionar-fila" class="btn btn-primary">➕</button>
-        <button class="btn btn-success">🔎</button>
-      </div>
-
-      <!-- 📊 TABELA RESPONSIVA -->
-      <div class="text-center table-container">
-        <div class="table-responsive">
-          <table id="table" class="table table-hover align-middle mb-0">
-            <thead class="table-dark">
-              <tr>
-                <th>Data</th>
-                <th>Placa</th>
-                <th>Kwh</th>
-                <th>Refrigerante</th>
-                <th>Valor</th>
-                <th>Forma de Pagamento</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+    <main class="flex-fill conteudo-central">
+      <section class="container-fluid h-100 d-flex flex-column justify-content-start py-4">
+        <div class="text-center mb-4">
+          <div class="heading-dashboard">
+            <div class="heading-content">
+              <h1>GRID FLOW</h1>
+              <p>Gerencie, visualize e controle seu fluxo de forma inteligente.</p>
+            </div>
+          </div>
+          
         </div>
-      </div>
+
+        <!-- Saldo mobile -->
+        <div class="card card-saldo-mobile shadow-sm mb-4">
+          <div class="card-body text-center">
+            <h5 class="card-title">Saldo Atual</h5>
+            <p id="saldoMobile" class="card-text fw-bold fs-5">R$ 00,00</p>
+          </div>
+        </div>
+
+        <!-- Botões de ação -->
+        <div class="mb-4 d-flex justify-content-center gap-3 flex-wrap">
+          <button id="bnt-adicionar-fila" class="btn btn-primary btn-acao">➕ Novo Registro</button>
+          <button class="btn btn-success btn-acao">🔎 Buscar</button>
+        </div>
+
+        <!-- Container dos cards -->
+        <div class="card card-tabela shadow-lg border-0">
+          <div class="card-body">
+            <h5 class="mb-3 fw-bold text-center text-primary">Últimos Registros</h5>
+            <div id="cards-container" class="d-flex flex-wrap justify-content-center gap-3">
+              <!-- Os cards dos registros serão inseridos dinamicamente pelo script.js -->
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
 
     <!-- Painel lateral direito -->
     <aside class="cards-laterais-direitos">
-      <div class="card mb-3 shadow-sm">
+      <div class="card card-info shadow-sm mb-3 text-center">
         <div class="card-body">
           <h5 class="card-title">Saldo</h5>
-          <p id="pSaldo" class="card-text">R$ 00,00</p>
+          <p id="pSaldo" class="card-text fw-bold fs-5">R$ 00,00</p>
         </div>
       </div>
 
-      <div class="card shadow-sm">
+      <div class="card card-info shadow-sm text-center">
         <div class="card-body">
-          <h5 class="card-title">🔔</h5>
-          <p class="card-text">Notificações recentes ou alertas.</p>
+          <h5 class="card-title">🔔 Notificações</h5>
+          <p class="card-text small">Nenhuma notificação no momento.</p>
         </div>
       </div>
     </aside>
   </div>
 
-  <!-- MODAL -->
+  <!-- Modal -->
   <div class="modal-adicionar" id="modal-adicionar">
     <div class="content">
       <div class="fechar">
@@ -149,5 +161,29 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
   <script type="module" src="./scripts/script.js"></script>
   <script type="module" src="./scripts/index.js"></script>
+
+  <!-- Sincronizador de saldo mobile -->
+  <script>
+    const syncSaldoMobile = () => {
+      const saldoDesktop = document.getElementById("pSaldo");
+      const saldoMobile = document.getElementById("saldoMobile");
+      if (saldoDesktop && saldoMobile) {
+        saldoMobile.textContent = saldoDesktop.textContent;
+      }
+    };
+    setInterval(syncSaldoMobile, 1000);
+
+    
+  window.addEventListener('scroll', () => {
+    const nav = document.getElementById('panel-heading-heading');
+    if (window.scrollY > 10) {
+      nav.classList.add('scrolled');
+    } else {
+      nav.classList.remove('scrolled');
+    }
+  });
+
+
+  </script>
 </body>
 </html>

@@ -17,17 +17,29 @@ function formatarDataBR(dataStr) {
   return data.toLocaleDateString("pt-BR", { timeZone: "UTC" });
 }
 
+// ----------------- PARSE DE DATA ROBUSTO -----------------
 function parseDataParaDate(dataStr) {
   if (!dataStr) return null;
-  if (dataStr.includes("/")) {
-    const [d, m, a] = dataStr.split("/");
-    return new Date(a, m - 1, d);
-  } else if (dataStr.includes("-")) {
-    const [a, m, d] = dataStr.split("-");
+  const str = dataStr.toString().trim();
+
+  // Caso venha no formato ISO (ex: 2025-11-03T00:00:00Z)
+  if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+    const [a, m, d] = str.substring(0, 10).split("-");
     return new Date(a, m - 1, d);
   }
+
+  // Caso venha no formato brasileiro (ex: 03/11/2025)
+  if (str.includes("/")) {
+    const [d, m, a] = str.split("/");
+    return new Date(a, m - 1, d);
+  }
+
+  // Caso já seja Date
+  if (str instanceof Date) return str;
+
   return null;
 }
+
 
 function moedaDesformatar(texto) {
   if (!texto) return 0;
@@ -58,22 +70,48 @@ async function carregarDadosDoServidorOuLocal() {
   }
 }
 
-// ----------------- filtrar (síncrono, recebe lista) -----------------
-function filtrarListaPorIntervalo(lista, inicioStr, fimStr) {
-  if (!inicioStr && !fimStr) return [];
+// ----------------- FILTRO COM DEBUG -----------------
+function filtrarListaPorIntervalo(lista, inicioStr, fimStr, debug = true) {
+  if (!inicioStr && !fimStr) {
+    if (debug) console.log("⚠ Nenhum intervalo aplicado — retornando lista completa.");
+    return lista;
+  }
+
   const inicio = parseDataParaDate(inicioStr);
   const fim = parseDataParaDate(fimStr);
+
   if (inicio) inicio.setHours(0, 0, 0, 0);
   if (fim) fim.setHours(23, 59, 59, 999);
 
-  return lista.filter(item => {
+  if (debug) {
+    console.log("🗓️ Intervalo selecionado:");
+    console.log("  Início:", inicio ? inicio.toLocaleDateString("pt-BR") : "(sem)");
+    console.log("  Fim:", fim ? fim.toLocaleDateString("pt-BR") : "(sem)");
+  }
+
+  const filtrados = lista.filter(item => {
     const dataItem = parseDataParaDate(item.data);
     if (!dataItem) return false;
-    dataItem.setHours(12, 0, 0, 0);
-    if (inicio && dataItem < inicio) return false;
-    if (fim && dataItem > fim) return false;
-    return true;
+
+    const dentro =
+      (!inicio || dataItem >= inicio) && (!fim || dataItem <= fim);
+
+    if (debug) {
+      console.log(
+        `→ ${item.placa || "(sem placa)"} | ${item.data} → ${
+          dentro ? "✅ dentro" : "❌ fora"
+        }`
+      );
+    }
+
+    return dentro;
   });
+
+  if (debug) {
+    console.log(`📊 Total de registros filtrados: ${filtrados.length}`);
+  }
+
+  return filtrados;
 }
 
 // ----------------- construir tabela -----------------
@@ -189,6 +227,48 @@ async function renderTudo(inicio, fim) {
   $("#relatorio-container").html(construirTabela(filtrados));
 }
 
+// ----------------- análise por período -----------------
+async function atualizarAnalisePorPeriodo() {
+  const todos = await carregarDadosDoServidorOuLocal();
+  if (!todos || todos.length === 0) {
+    $("#tabela-analise td[id]").text("R$ 0,00");
+    $("#tabela-analise td[id$='kwh']").text("0");
+    return;
+  }
+
+  const hoje = new Date();
+  const periodos = {
+    diario: { inicio: addDays(hoje, -0), fim: hoje },
+    semanal: { inicio: addDays(hoje, -6), fim: hoje },
+    mensal: { inicio: addMonths(hoje, -1), fim: hoje },
+    anual: { inicio: addYears(hoje, -1), fim: hoje },
+  };
+
+  Object.entries(periodos).forEach(([nome, { inicio, fim }]) => {
+    const filtrados = filtrarListaPorIntervalo(todos, toInputDate(inicio), toInputDate(fim), false);
+
+    let totalKwh = 0, totalBebidas = 0, totalReceita = 0;
+    filtrados.forEach(item => {
+      totalKwh += parseFloat(item.kwh) || 0;
+      totalBebidas += moedaDesformatar(item.refrigerante);
+      totalReceita += moedaDesformatar(item.valor);
+    });
+
+    // Número de dias no intervalo (mínimo 1)
+    const dias = Math.max(1, Math.ceil((fim - inicio) / (1000 * 60 * 60 * 24)) + 1);
+
+    // 🔹 Agora calculamos a média
+    const mediaKwh = totalKwh / dias;
+    const mediaBebidas = totalBebidas / dias;
+    const mediaReceita = totalReceita / dias;
+
+    $(`#analise-${nome}-kwh`).text(mediaKwh.toFixed(2));
+    $(`#analise-${nome}-bebidas`).text(formatarMoedaNumero(mediaBebidas));
+    $(`#analise-${nome}-receita`).text(formatarMoedaNumero(mediaReceita));
+  });
+}
+
+
 // ----------------- eventos e inicialização -----------------
 $(document).ready(function () {
   $("#relatorio-container").html(`
@@ -228,4 +308,7 @@ $(document).ready(function () {
     $("#relatorio-container, #resumo-consumo").html("");
     $("#total-geral, #total-especie, #total-pix, #total-cartao").text("R$ 0,00");
   });
+
+  // 🔄 Atualiza tabela de análise automaticamente ao carregar
+  atualizarAnalisePorPeriodo();
 });

@@ -2,37 +2,56 @@ import { getRelatorios, addRelatorio } from "../api/apiService.js";
 
 let array = [];
 
-// =======================
-// 📦 Funções principais
-// =======================
-async function carregarArray() {
-  try {
-    array = await getRelatorios();
-  } catch {
-    carregarArrayDoLocalStorage(); // usa o localStorage se o back estiver off
-  }
-  renderizarTabela();
-  atualizarSaldo();
+/* =======================
+   Util — Escape HTML
+   ======================= */
+function escapeHTML(str = "") {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
-async function adicionarRegistro(novoItem) {
-  try {
-    await addRelatorio(novoItem);
-    array = await getRelatorios();
-  } catch (err) {
-    console.warn("⚠️ Falha ao enviar para o servidor, salvando localmente.");
-    array.push(novoItem);
-    salvarArrayNoLocalStorage();
-  }
-  renderizarTabela();
-  atualizarSaldo();
+/* =======================
+   📅 Funções de data
+   ======================= */
+function getDataHojeISO() {
+  const hoje = new Date();
+  const ano = hoje.getFullYear();
+  const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+  const dia = String(hoje.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
 }
 
-// =======================
-// 💰 Formatação de moeda
-// =======================
+function formatarData(dataISO) {
+  if (!dataISO) return "-";
+  // Lida com '2025-11-04T...' ou '2025-11-04' já no front
+  if (dataISO.includes("T")) {
+    const date = new Date(dataISO);
+    const dia = String(date.getDate()).padStart(2, "0");
+    const mes = String(date.getMonth() + 1).padStart(2, "0");
+    const ano = date.getFullYear();
+    return `${dia}/${mes}/${ano}`;
+  }
+  if (dataISO.includes("-")) {
+    const [ano, mes, dia] = dataISO.split("-");
+    return `${dia}/${mes}/${ano}`;
+  }
+  return dataISO;
+}
+
+/* =======================
+   💰 Formatação de moeda
+   ======================= */
 const moeda = {
   formatar(valor) {
+    if (valor === undefined || valor === null) valor = 0;
+    if (typeof valor === "string") {
+      // tenta desformatar se for string
+      valor = this.desformatar(valor);
+    }
     if (isNaN(valor)) valor = 0;
     return Number(valor).toLocaleString("pt-BR", {
       minimumFractionDigits: 2,
@@ -48,9 +67,9 @@ const moeda = {
   },
 };
 
-// =======================
-// 💾 LocalStorage helpers
-// =======================
+/* =======================
+   💾 LocalStorage helpers
+   ======================= */
 function salvarArrayNoLocalStorage() {
   localStorage.setItem("registros", JSON.stringify(array));
 }
@@ -60,101 +79,166 @@ function carregarArrayDoLocalStorage() {
   array = data ? JSON.parse(data) : [];
 }
 
-// =======================
-// 🗓️ Função de formatação de data
-// =======================
-function formatarData(dataISO) {
-  if (!dataISO) return "-";
-
-  // Se vier em formato ISO com 'T'
-  if (dataISO.includes("T")) {
-    const date = new Date(dataISO);
-    const dia = String(date.getDate()).padStart(2, "0");
-    const mes = String(date.getMonth() + 1).padStart(2, "0");
-    const ano = date.getFullYear();
-    return `${dia}/${mes}/${ano}`;
-  }
-
-  // Se vier no formato "YYYY-MM-DD"
-  if (dataISO.includes("-")) {
-    const [ano, mes, dia] = dataISO.split("-");
-    return `${dia}/${mes}/${ano}`;
-  }
-
-  return dataISO;
-}
-
-// =======================
-// 🧾 Renderizar tabela
-// =======================
+/* =======================
+   🧾 Renderizar tabela (fallback)
+   ======================= */
 function renderizarTabela() {
   const tbody = $("#table tbody");
+  if (!tbody.length) return; // tabela inexistente -> ignora
+
   tbody.empty();
 
+  if (!array.length) {
+    tbody.append("<tr><td colspan='6' class='text-center py-4 text-muted'>Nenhum registro de hoje.</td></tr>");
+    return;
+  }
+
   array.forEach((item) => {
-    const dataFormatada = formatarData(item.data);
-
-    const formaPag = item.forma_pagamento || item.formaPagamento || "-";
+    const dataFormatada = escapeHTML(formatarData(item.data));
+    const placa = escapeHTML(item.placa || "-");
+    const kwhFmt = moeda.formatar(item.kwh);
     const ref = item.refrigerante
-      ? (isNaN(item.refrigerante)
-          ? item.refrigerante
-          : moeda.formatar(item.refrigerante))
+      ? (isNaN(item.refrigerante) ? escapeHTML(String(item.refrigerante)) : moeda.formatar(item.refrigerante))
       : "0,00";
-
     const valorFmt = `R$ ${moeda.formatar(item.valor)}`;
+    const formaPagRaw = item.forma_pagamento || item.formaPagamento || "-";
+    const formaPag = escapeHTML(formaPagRaw.charAt ? (formaPagRaw.charAt(0).toUpperCase() + formaPagRaw.slice(1)) : formaPagRaw);
 
     const linha = `
-      <tr>
+      <tr class="linha-tabela">
         <td>${dataFormatada}</td>
-        <td>${item.placa || "-"}</td>
-        <td>${moeda.formatar(item.kwh)}</td>
+        <td>${placa}</td>
+        <td>${kwhFmt}</td>
         <td>${ref}</td>
         <td>${valorFmt}</td>
-        <td>${formaPag.charAt(0).toUpperCase() + formaPag.slice(1)}</td>
+        <td>${formaPag}</td>
       </tr>
     `;
     tbody.append(linha);
   });
+
+  // animação sutil (usando CSS transform via JS)
+  $(".linha-tabela").css({ opacity: 0, transform: "translateY(8px)" }).each(function (i) {
+    $(this).delay(i * 60).animate({ opacity: 1, top: 0 }, 200);
+    // depois reset transform (para não afetar hover)
+    setTimeout(() => $(this).css({ transform: "" }), i * 60 + 220);
+  });
 }
 
-// =======================
-// 💰 Atualizar saldo
-// =======================
-function atualizarSaldo() {
-  let totalS = 0;
-  for (let i = 0; i < array.length; i++) {
-    totalS += moeda.desformatar(array[i].valor);
+/* =======================
+   🧾 Renderizar Cards (PRINCIPAL)
+   ======================= */
+function renderizarCards() {
+  const container = $("#cards-container");
+  // se não existir container (por versão antiga), ignora silenciosamente
+  if (!container.length) return;
+
+  container.empty();
+
+  if (!array.length) {
+    container.append("<div class='cards-empty text-center w-100 py-4 text-muted'>Nenhum registro de hoje.</div>");
+    return;
   }
-  $("#pSaldo").text(`R$ ${moeda.formatar(totalS)}`);
+
+  // pegamos os últimos 5 registros (mais recentes)
+  const ultimos = array.slice(-5).reverse();
+
+  ultimos.forEach((item, i) => {
+    const dataFmt = escapeHTML(formatarData(item.data));
+    const placa = escapeHTML(item.placa || "-");
+    const kwhFmt = moeda.formatar(item.kwh);
+    const refrigeranteFmt = moeda.formatar(item.refrigerante || 0);
+    const valorFmt = `R$ ${moeda.formatar(item.valor)}`;
+    const formaPag = escapeHTML(item.forma_pagamento || item.formaPagamento || "-");
+
+    // estrutura do card — mantém dados simples e legíveis
+    const card = $(`
+      <article class="card-registro" role="article" aria-label="Registro ${placa}">
+        <div class="card-registro-top d-flex justify-content-between align-items-start">
+          <div class="data">${dataFmt}</div>
+          <div class="placa chip">${placa}</div>
+        </div>
+
+        <div class="card-registro-body mt-2">
+          <div class="kwh"><strong>⚡ KWh:</strong> ${kwhFmt}</div>
+          <div class="refrigerante"><strong>🥤 Refrigerante:</strong> ${refrigeranteFmt}</div>
+        </div>
+
+        <div class="card-registro-footer mt-2 d-flex justify-content-between align-items-center">
+          <div class="valor">${valorFmt}</div>
+          <div class="forma-pagamento">${formaPag}</div>
+        </div>
+      </article>
+    `);
+
+    // delay da animação via style inline (controlado pelo CSS)
+    card.css("animation-delay", `${i * 80}ms`);
+    container.append(card);
+  });
 }
 
-// =======================
-// ⚙️ Lógica da interface
-// =======================
+/* =======================
+   💰 Atualizar saldo
+   ======================= */
+function atualizarSaldo() {
+  const total = array.reduce((acc, item) => acc + moeda.desformatar(item.valor), 0);
+  const texto = `R$ ${moeda.formatar(total)}`;
+  $("#pSaldo").text(texto);
+  const saldoMobile = $("#saldoMobile");
+  if (saldoMobile.length) saldoMobile.text(texto);
+}
+
+/* =======================
+   ⚙️ Carregar registros (inicial e refresh)
+   ======================= */
+async function carregarArray() {
+  try {
+    const dados = await getRelatorios();
+    // espera que getRelatorios retorne array; caso contrário, fallback
+    array = Array.isArray(dados) ? dados : [];
+  } catch (err) {
+    // fallback local
+    carregarArrayDoLocalStorage();
+  }
+
+  // filtra apenas os registros do dia atual
+  const hoje = getDataHojeISO();
+  array = array.filter(item => {
+    const data = (item.data || "").split("T")[0];
+    return data === hoje;
+  });
+
+  // Atualiza tela: tanto a tabela (se existir) quanto os cards
+  renderizarTabela();
+  renderizarCards();
+  atualizarSaldo();
+}
+
+/* =======================
+   ⚙️ Lógica da interface / Eventos
+   ======================= */
 $(document).ready(function () {
-  // Atualiza campo de data (formato DD/MM/YYYY)
+  const modal = $("#modal-adicionar");
+  const body = $("body");
+  const menu = $("#menu-lateral");
+  const btnMenu = $("#btn-menu");
+
+  /* --- Atualizar data do formulário --- */
   function atualizarData() {
-    const dataAtual = new Date();
-    const dia = String(dataAtual.getDate()).padStart(2, "0");
-    const mes = String(dataAtual.getMonth() + 1).padStart(2, "0");
-    const ano = dataAtual.getFullYear();
+    const hoje = new Date();
+    const dia = String(hoje.getDate()).padStart(2, "0");
+    const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+    const ano = hoje.getFullYear();
     $("#data").val(`${dia}/${mes}/${ano}`);
   }
 
-  // --- Controle do botão enviar ---
-  $("#enviar").prop("disabled", true);
-  setTimeout(() => $("#enviar").prop("disabled", false), 1000);
-
-  // ===========================
-  // 🧩 Controle do Modal
-  // ===========================
-  const modal = $("#modal-adicionar");
-  const body = $("body");
-
-  $("#bnt-adicionar-fila, #btn-adicionar-fila, #btn-adicionar-fila-alt").on("click", function () {
+  /* --- Abrir modal (captura variantes de id) --- */
+  $(document).on("click", "#bnt-adicionar-fila, #btn-adicionar-fila, #btn-adicionar-fila-alt", function () {
     atualizarData();
     modal.addClass("mostrar");
     body.css("overflow", "hidden");
+    // reset pequenos campos
+    $("#kwh, #txt_consumo, #valor").val("");
   });
 
   function fecharModal() {
@@ -162,67 +246,61 @@ $(document).ready(function () {
     body.css("overflow", "");
   }
 
-  $("#btn-fechar-modal").click(fecharModal);
+  // botões de fechar / cancelar
+  $(document).on("click", "#btn-fechar-modal, #btn-cancelar", fecharModal);
 
-  $("#btn-cancelar").click(function () {
+  // limpar e fechar no cancelar
+  $(document).on("click", "#btn-cancelar", function () {
     $("#kwh, #txt_consumo, #placa, #relf, #valor, #formaPagamento").val("");
     fecharModal();
   });
 
-  $(window).click(function (e) {
+  // fechar ao clicar no backdrop
+  $(window).on("click", function (e) {
     if ($(e.target).is("#modal-adicionar")) fecharModal();
   });
 
-  $(document).keydown(function (e) {
+  // fechar com ESC
+  $(document).on("keydown", function (e) {
     if (e.key === "Escape" && modal.is(":visible")) fecharModal();
   });
 
-  // ===========================
-  // ⚡ Lógica dos campos
-  // ===========================
-  $("#kwh").on("blur", () => {
-    let val = moeda.desformatar($("#kwh").val());
-    $("#kwh").val(moeda.formatar(val));
-    let consumo = moeda.desformatar($("#txt_consumo").val()) || 0;
-    let total = val * 2 + consumo; // regra de cálculo
-    $("#valor").val(moeda.formatar(total));
-  });
-
-  $("#txt_consumo").on("blur", () => {
-    let consumoNum = moeda.desformatar($("#txt_consumo").val());
+  /* --- Cálculo automático de valor --- */
+  $(document).on("blur", "#kwh, #txt_consumo", function () {
+    const kwhNum = moeda.desformatar($("#kwh").val()) || 0;
+    const consumoNum = moeda.desformatar($("#txt_consumo").val()) || 0;
+    $("#kwh").val(moeda.formatar(kwhNum));
     $("#txt_consumo").val(moeda.formatar(consumoNum));
-    let kwhNum = moeda.desformatar($("#kwh").val());
-    let total = kwhNum * 2 + consumoNum;
-    $("#valor").val(moeda.formatar(total));
+    $("#valor").val(moeda.formatar(kwhNum * 2 + consumoNum));
   });
 
-  $("#relf").change(() => {
-    let val = $("#relf").val()?.toString().toUpperCase() || "";
-    if (val === "SIM") $("#txt_valorRefrigerante").show();
+  // mostrar campo de consumo se refrigerante = SIM
+  $(document).on("change", "#relf", function () {
+    const val = $("#relf").val()?.toString().toUpperCase() || "";
+    if (val === "SIM") $("#txt_valorRefrigerante").fadeIn(200);
     else {
-      $("#txt_valorRefrigerante").hide();
+      $("#txt_valorRefrigerante").fadeOut(200);
       $("#txt_consumo").val("");
     }
   });
 
-  // ===========================
-  // 🧾 Envio do formulário
-  // ===========================
-  $("#enviar").off("click").on("click", async () => {
-    let data = $("#data").val();
-    let placa = $("#placa").val();
+  /* --- Envio de registro --- */
+  $(document).on("click", "#enviar", async function (e) {
+    e.preventDefault();
 
-    let kwhNum = moeda.desformatar($("#kwh").val());
-    let consumoNum = moeda.desformatar($("#txt_consumo").val());
-    let valorTotal = kwhNum * 2 + consumoNum;
-    let formaPagamento = $("#formaPagamento").val();
+    const data = $("#data").val();
+    const placa = $("#placa").val();
+    const kwhNum = moeda.desformatar($("#kwh").val());
+    const consumoNum = moeda.desformatar($("#txt_consumo").val());
+    const formaPagamento = $("#formaPagamento").val();
+    const valorTotal = kwhNum * 2 + consumoNum;
 
     if (!placa || kwhNum <= 0 || valorTotal <= 0 || !formaPagamento) {
+      // UX: manter alert por enquanto, mas pode trocar por toast
       alert("⚠️ Preencha todos os campos obrigatórios!");
       return;
     }
 
-    // Converte data para formato ISO (YYYY-MM-DD)
     const [dia, mes, ano] = data.split("/");
     const dataFormatada = `${ano}-${mes}-${dia}`;
 
@@ -235,36 +313,45 @@ $(document).ready(function () {
       forma_pagamento: formaPagamento,
     };
 
-    await adicionarRegistro(novo);
+    try {
+      await addRelatorio(novo);
+      // Recarrega do backend para manter fonte da verdade
+      await carregarArray();
+    } catch (err) {
+      console.warn("Falha ao enviar para o backend, salvando localmente.", err);
+      // salva localmente como fallback
+      array.push(novo);
+      salvarArrayNoLocalStorage();
+      carregarArray();
+    }
 
     fecharModal();
+    // limpa campos do form
     $("#placa, #kwh, #valor, #relf, #txt_consumo, #formaPagamento").val("");
     atualizarData();
-    salvarArrayNoLocalStorage();
   });
 
-  // Lógica para abrir e fechar o menu lateral
-  $("#btn-menu").on("click", function () {
-    const menu = $("#menu-lateral");
+  /* --- Menu responsivo --- */
+  btnMenu.on("click", function () {
+    menu.toggleClass("aberto");
+    body.toggleClass("menu-aberto");
 
     if (menu.hasClass("aberto")) {
-      menu.removeClass("aberto");
-      $("body").removeClass("menu-aberto"); // Remove a sobrecapa
+      menu.css("box-shadow", "2px 0 12px rgba(0,0,0,0.2)");
     } else {
-      menu.addClass("aberto");
-      $("body").addClass("menu-aberto"); // Adiciona a sobrecapa
+      setTimeout(() => menu.css("box-shadow", ""), 300);
     }
   });
 
-  // Lógica para fechar o menu quando clicar fora
-  $(window).click(function (e) {
-    if (!$(e.target).closest("#menu-lateral").length && !$(e.target).is("#btn-menu")) {
-      $("#menu-lateral").removeClass("aberto");
-      $("body").removeClass("menu-aberto");
+  // fecha menu ao clicar fora (mobile)
+  $(window).on("click", function (e) {
+    if (!$(e.target).closest("#menu-lateral, #btn-menu").length) {
+      menu.removeClass("aberto");
+      body.removeClass("menu-aberto");
     }
   });
 
-  // Inicializa data, dados e saldo
+  /* --- Inicialização --- */
   atualizarData();
   carregarArray();
 });
