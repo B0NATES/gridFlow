@@ -1,4 +1,5 @@
-const API_BASE_URL = "https://gridflow-api.onrender.com";
+const API_BASE_URL = "https://gridflow-api.onrender.com/api";
+
 
 document.getElementById("login-form").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -6,6 +7,9 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
   const email = document.getElementById("email").value.trim();
   const senha = document.getElementById("senha").value.trim();
   const erroMsg = document.getElementById("erro-msg");
+
+  console.log("🔗 Enviando requisição para:", `${API_BASE_URL}/auth/login`);
+
 
   try {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
