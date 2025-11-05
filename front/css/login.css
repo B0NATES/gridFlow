@@ -1,68 +1,157 @@
+/* ============================================
+   GRID FLOW — Estilo Login Integrado (2025)
+   ============================================ */
+
+/* ======= VARIÁVEIS DE TEMA ======= */
+:root {
+  --azul-principal: #1b2cc1;
+  --azul-secundario: #4c5eff;
+  --verde-suave: #0fd976;
+  --branco: #ffffff;
+  --cinza-claro: #f5f6fa;
+  --cinza-medio: #dcdde1;
+  --cinza-escuro: #2f3640;
+  --gradiente: linear-gradient(135deg, var(--azul-principal), var(--azul-secundario));
+  --sombra: 0 8px 24px rgba(0, 0, 0, 0.15);
+  --transicao: all 0.3s ease;
+  font-family: "Inter", sans-serif;
+}
+
+/* ======= BASE ======= */
 body {
-    font-family: "Inter", sans-serif;
-    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0;
-    color: #fff;
-  }
-  
+  background: var(--gradiente);
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  overflow: hidden;
+  position: relative;
+  color: var(--branco);
+}
+
+/* ======= EFEITO DE FUNDO DINÂMICO ======= */
+body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 20% 30%, rgba(79, 90, 255, 0.3), transparent 70%),
+              radial-gradient(circle at 80% 70%, rgba(15, 217, 118, 0.25), transparent 70%);
+  filter: blur(80px);
+  z-index: 0;
+  animation: fundoLuz 12s infinite alternate ease-in-out;
+}
+
+@keyframes fundoLuz {
+  0% { transform: scale(1) translate(0, 0); }
+  100% { transform: scale(1.1) translate(-20px, 20px); }
+}
+
+/* ======= CONTAINER DE LOGIN ======= */
+.login-container {
+  position: relative;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--cinza-escuro);
+  padding: 40px 35px;
+  border-radius: 20px;
+  box-shadow: var(--sombra);
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  animation: fadeUp 0.6s ease forwards;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ======= TÍTULO ======= */
+.login-container h1 {
+  margin-bottom: 25px;
+  color: var(--azul-principal);
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* ======= FORM ======= */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* LABELS */
+label {
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* INPUTS */
+input {
+  padding: 10px 12px;
+  border: 1px solid var(--cinza-medio);
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: var(--transicao);
+  background: var(--cinza-claro);
+}
+
+input:focus {
+  border-color: var(--azul-secundario);
+  box-shadow: 0 0 0 3px rgba(76, 94, 255, 0.2);
+  outline: none;
+  background: var(--branco);
+}
+
+/* ======= BOTÃO ======= */
+button {
+  background: var(--gradiente);
+  border: none;
+  color: var(--branco);
+  font-weight: 700;
+  padding: 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: var(--transicao);
+  box-shadow: 0 4px 10px rgba(27, 44, 193, 0.3);
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(27, 44, 193, 0.4);
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+/* ======= MENSAGEM DE ERRO ======= */
+.erro-msg {
+  color: #dc2626;
+  margin-top: 10px;
+  font-weight: 600;
+  display: none;
+  font-size: 0.9rem;
+}
+
+/* ======= RESPONSIVIDADE ======= */
+@media (max-width: 480px) {
   .login-container {
-    background: #ffffff;
-    color: #1e293b;
-    padding: 40px 30px;
-    border-radius: 16px;
-    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
-    width: 100%;
-    max-width: 360px;
-    text-align: center;
+    padding: 30px 20px;
+    max-width: 90%;
   }
-  
+
+  input, button {
+    font-size: 0.95rem;
+  }
+
   .login-container h1 {
-    margin-bottom: 25px;
-    color: #1d4ed8;
+    font-size: 1.5rem;
   }
-  
-  form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  label {
-    text-align: left;
-    font-weight: 600;
-  }
-  
-  input {
-    padding: 10px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 1rem;
-  }
-  
-  button {
-    background: linear-gradient(135deg, #2563eb, #3b82f6);
-    border: none;
-    color: #fff;
-    font-weight: 600;
-    padding: 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-  
-  button:hover {
-    transform: translateY(-2px);
-    filter: brightness(1.1);
-  }
-  
-  .erro-msg {
-    color: #dc2626;
-    margin-top: 10px;
-    font-weight: 500;
-    display: none;
-  }
-  
+}

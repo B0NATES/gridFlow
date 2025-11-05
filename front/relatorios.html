@@ -3,134 +3,209 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>Relatórios</title>
-  
-  <!-- Estilos -->
-  <link rel="stylesheet" href="./css/relatorios.css" />
 
-  <!-- ✅ jQuery carregado antes do script -->
+  <!-- Estilos -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="./css/relatorios.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@300;500;700&display=swap" rel="stylesheet">
+
+  <!-- jQuery -->
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
   <script type="module" src="./scripts/authCheck.js"></script>
 </head>
 
 <body>
-  <div class="layout">
-    <!-- 🔹 Painel lateral fixo -->
-    <nav class="sidebar">
-      <h2 class="sidebar-title">Menu</h2>
-      <ul>
-        <li><a href="index.html">🏠 <span>Início</span></a></li>
-        <li><a href="relatorios.html" class="active">📊 <span>Relatórios</span></a></li>
-        <li><a href="configuracoes.html">⚙️ <span>Configurações</span></a></li>
-      </ul>
-    </nav>
+  <!-- 🔹 Painel superior -->
+  <nav class="navbar navbar-dark shadow-sm" id="panel-heading-heading" role="navigation" aria-label="Barra superior">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        <button id="btn-menu" class="btn-hamburguer d-lg-none" aria-controls="menu-lateral" aria-expanded="false" aria-label="Abrir menu">☰</button>
+        <a id="link-heading" class="navbar-brand d-flex align-items-center gap-2" href="index.html">
+          <img class="img-heading" src="./img/android-chrome-512x512.png" alt="Logo">
+          <span class="txt-gridFlow">GRID FLOW</span>
+        </a>
+      </div>
+      <div class="text-light small fw-semibold me-2">Bem-vindo, <span id="usuario-nome">admin</span></div>
+    </div>
+  </nav>
 
-    <!-- 🔹 Conteúdo principal -->
-    <div class="container-relatorios">
-      <header>
-        <h1>📊 Relatórios de Pagamentos</h1>
-        <p class="descricao">Visualize os registros de consumo e pagamentos filtrando por período.</p>
-      </header>
+  <!-- 🔹 Painel lateral -->
+  <aside class="panel-nav-lateral-esquerdo" id="menu-lateral" role="navigation" aria-label="Menu lateral">
+    <ul class="list-unstyled mt-3">
+      <li data-label="Início"><a href="index.html" class="text-decoration-none text-light d-flex align-items-center w-100"><span class="icon">🏠</span><span class="label">Início</span></a></li>
+      <li data-label="Configurações"><a href="configuracoes.html" class="text-decoration-none text-light d-flex align-items-center w-100"><span class="icon">⚙️</span><span class="label">Configurações</span></a></li>
+      <li data-label="Relatórios"><a href="relatorios.html" class="text-decoration-none text-light d-flex align-items-center w-100 active"><span class="icon">📊</span><span class="label">Relatórios</span></a></li>
+      <li data-label="Agenda"><a href="#" class="text-decoration-none text-light d-flex align-items-center w-100"><span class="icon">📅</span><span class="label">Agenda</span></a></li>
+    </ul>
+  </aside>
 
-      <!-- 🔹 Filtros -->
-      <section class="filtros-container">
-        <h2>Filtrar Registros</h2>
-        <div class="filtros-datas">
-          <label for="data-inicial">Data inicial:</label>
-          <input type="date" id="data-inicial" />
-          
-          <label for="data-final">Data final:</label>
-          <input type="date" id="data-final" />
+  <!-- overlay (criado pelo JS quando necessário) -->
+  <!-- Conteúdo principal -->
+  <main class="container-relatorios" id="conteudo-principal">
+    <header>
+      <h1>📊 Relatórios de Pagamentos</h1>
+      <p class="descricao">Visualize os registros de consumo e pagamentos filtrando por período.</p>
+    </header>
 
-          <button id="btn-filtrar">Filtrar</button>
-          <button id="btn-limpar">Limpar</button>
-        </div>
+    <!-- 🔹 Filtros -->
+    <section class="filtros-container" aria-labelledby="filtros-heading">
+      <h2 id="filtros-heading">Filtrar Registros</h2>
 
-        <div class="atalhos">
-          <button class="filtro-rapido" data-periodo="diario">📅 Diário</button>
-          <button class="filtro-rapido" data-periodo="semanal">🗓️ Semanal</button>
-          <button class="filtro-rapido" data-periodo="mensal">📆 Mensal</button>
-          <button class="filtro-rapido" data-periodo="anual">📈 Anual</button>
-        </div>
-      </section>
+      <div class="filtros-datas">
+        <label for="data-inicial">Data inicial:</label>
+        <input type="date" id="data-inicial" />
 
-      <!-- 🔹 Totais -->
-      <section id="totais-container" class="totais-container">
-        <h2>Totais de Receitas</h2>
-        <div class="cards-totais">
-          <!-- ✅ Total geral corrigido -->
-          <div class="card-total geral">
-            💰 <strong>Total Geral:</strong> <span id="total-geral">R$ 0,00</span>
-          </div>
+        <label for="data-final">Data final:</label>
+        <input type="date" id="data-final" />
 
-          <div class="card-total especie">
-            💵 <strong>Dinheiro:</strong> <span id="total-especie">R$ 0,00</span>
-          </div>
+        <button id="btn-filtrar" type="button" class="btn">Filtrar</button>
+        <button id="btn-limpar" type="button" class="btn">Limpar</button>
+      </div>
 
-          <div class="card-total pix">
-            📱 <strong>Pix:</strong> <span id="total-pix">R$ 0,00</span>
-          </div>
+      <div class="atalhos" role="toolbar" aria-label="Atalhos de período">
+        <button class="filtro-rapido" data-periodo="diario" type="button">📅 Diário</button>
+        <button class="filtro-rapido" data-periodo="semanal" type="button">🗓️ Semanal</button>
+        <button class="filtro-rapido" data-periodo="mensal" type="button">📆 Mensal</button>
+        <button class="filtro-rapido" data-periodo="anual" type="button">📈 Anual</button>
+      </div>
+    </section>
 
-          <div class="card-total cartao">
-            💳 <strong>Cartão:</strong> <span id="total-cartao">R$ 0,00</span>
-          </div>
-        </div>
-      </section>
+    <!-- 🔹 Totais -->
+    <section id="totais-container" class="totais-container" aria-labelledby="totais-heading">
+      <h2 id="totais-heading">Totais de Receitas</h2>
+      <div class="cards-totais" role="list">
+        <div class="card-total geral" role="listitem">💰 <strong>Total Geral:</strong> <span id="total-geral">R$ 0,00</span></div>
+        <div class="card-total especie" role="listitem">💵 <strong>Dinheiro:</strong> <span id="total-especie">R$ 0,00</span></div>
+        <div class="card-total pix" role="listitem">📱 <strong>Pix:</strong> <span id="total-pix">R$ 0,00</span></div>
+        <div class="card-total cartao" role="listitem">💳 <strong>Cartão:</strong> <span id="total-cartao">R$ 0,00</span></div>
+      </div>
+    </section>
 
-      <!-- 🔹 Análise por Período -->
-      <section id="analise-consumo">
-        <h2>📈 Análise de Consumo por Período</h2>
-        <table id="tabela-analise">
-          <thead>
-            <tr>
-              <th>Período</th>
-              <th>Energia (kWh)</th>
-              <th>Bebidas (R$)</th>
-              <th>Receita (R$)</th>
+    <!-- 🔹 Análise -->
+    <section id="analise-consumo" aria-labelledby="analise-heading">
+      <h2 id="analise-heading">📈 Análise de Consumo por Período</h2>
+
+      <!-- tabela responsiva: envolve a table -->
+      <div class="table-responsive-x" role="region" aria-label="Tabela de análise">
+        <table id="tabela-analise" class="table-base" role="table">
+          <thead role="rowgroup">
+            <tr role="row">
+              <th role="columnheader">Período</th>
+              <th role="columnheader">Energia (kWh)</th>
+              <th role="columnheader">Bebidas (R$)</th>
+              <th role="columnheader">Receita (R$)</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>Diário</td>
-              <td id="analise-diario-kwh">0</td>
-              <td id="analise-diario-bebidas">R$ 0,00</td>
-              <td id="analise-diario-receita">R$ 0,00</td>
+          <tbody role="rowgroup">
+            <tr role="row">
+              <td role="cell">Diário</td>
+              <td role="cell" id="analise-diario-kwh">0</td>
+              <td role="cell" id="analise-diario-bebidas">R$ 0,00</td>
+              <td role="cell" id="analise-diario-receita">R$ 0,00</td>
             </tr>
-            <tr>
-              <td>Semanal</td>
-              <td id="analise-semanal-kwh">0</td>
-              <td id="analise-semanal-bebidas">R$ 0,00</td>
-              <td id="analise-semanal-receita">R$ 0,00</td>
+            <tr role="row">
+              <td role="cell">Semanal</td>
+              <td role="cell" id="analise-semanal-kwh">0</td>
+              <td role="cell" id="analise-semanal-bebidas">R$ 0,00</td>
+              <td role="cell" id="analise-semanal-receita">R$ 0,00</td>
             </tr>
-            <tr>
-              <td>Mensal</td>
-              <td id="analise-mensal-kwh">0</td>
-              <td id="analise-mensal-bebidas">R$ 0,00</td>
-              <td id="analise-mensal-receita">R$ 0,00</td>
+            <tr role="row">
+              <td role="cell">Mensal</td>
+              <td role="cell" id="analise-mensal-kwh">0</td>
+              <td role="cell" id="analise-mensal-bebidas">R$ 0,00</td>
+              <td role="cell" id="analise-mensal-receita">R$ 0,00</td>
             </tr>
-            <tr>
-              <td>Anual</td>
-              <td id="analise-anual-kwh">0</td>
-              <td id="analise-anual-bebidas">R$ 0,00</td>
-              <td id="analise-anual-receita">R$ 0,00</td>
+            <tr role="row">
+              <td role="cell">Anual</td>
+              <td role="cell" id="analise-anual-kwh">0</td>
+              <td role="cell" id="analise-anual-bebidas">R$ 0,00</td>
+              <td role="cell" id="analise-anual-receita">R$ 0,00</td>
             </tr>
           </tbody>
         </table>
-      </section>
+      </div>
+    </section>
 
-      <!-- 🔹 Resumo e Tabela -->
-      <section id="resumo-consumo"></section>
-      <section id="relatorio-container">
-        <div class="sem-dados">
-          <i>📊</i>
-          <p>Nenhum dado encontrado. <br>Selecione um período para gerar o relatório.</p>
-        </div>
-      </section>
-    </div>
-  </div>
+    <section id="resumo-consumo" aria-live="polite"></section>
 
-  <!-- ✅ Script principal -->
+    <section id="relatorio-container">
+      <div class="sem-dados" aria-hidden="false">
+        <i>📊</i>
+        <p>Nenhum dado encontrado. <br>Selecione um período para gerar o relatório.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Scripts -->
   <script type="module" src="./scripts/relatorios.js"></script>
+
+  <!-- Menu / Overlay script (robusto) -->
+  <script>
+    (function () {
+      const btn = document.getElementById('btn-menu');
+      const menu = document.getElementById('menu-lateral');
+      // cria overlay se não existir
+      let overlay = document.querySelector('.menu-overlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'menu-overlay';
+        document.body.appendChild(overlay);
+      }
+
+      const setAria = (open) => {
+        if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      };
+
+      const openMenu = () => {
+        menu.classList.add('active');
+        overlay.classList.add('show');
+        setAria(true);
+      };
+      const closeMenu = () => {
+        menu.classList.remove('active');
+        overlay.classList.remove('show');
+        setAria(false);
+      };
+      const toggleMenu = () => {
+        if (menu.classList.contains('active')) closeMenu(); else openMenu();
+      };
+
+      if (btn) {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleMenu();
+        });
+      }
+
+      // fechar ao clicar no overlay
+      overlay.addEventListener('click', () => closeMenu());
+
+      // fechar se clicar em um link dentro do menu (mobile)
+      menu.addEventListener('click', (e) => {
+        const a = e.target.closest('a');
+        if (a && window.innerWidth < 992) {
+          closeMenu();
+        }
+      });
+
+      // fechar menu se redimensionar para desktop (evita menu preso)
+      window.addEventListener('resize', () => {
+        if (window.innerWidth >= 992) {
+          // garantir menu escondido na vista mobile
+          menu.classList.remove('active');
+          overlay.classList.remove('show');
+          setAria(false);
+        }
+      });
+
+      // adicionar comportamento de sombra no header ao rolar
+      window.addEventListener('scroll', () => {
+        const nav = document.getElementById('panel-heading-heading');
+        if (!nav) return;
+        if (window.scrollY > 8) nav.classList.add('scrolled'); else nav.classList.remove('scrolled');
+      });
+    })();
+  </script>
 </body>
 </html>

@@ -1,6 +1,12 @@
 // front/scripts/relatorios.js
 import { getRelatorios } from "../api/apiService.js";
 
+// PAGINAÇÃO: controle global
+const cardsPorPagina = 5;
+let paginaAtual = 1;
+let dadosFiltradosGlobais = [];
+
+
 // ----------------- helpers -----------------
 function formatarMoedaNumero(valor) {
   const numero = parseFloat(valor) || 0;
@@ -40,7 +46,6 @@ function parseDataParaDate(dataStr) {
   return null;
 }
 
-
 function moedaDesformatar(texto) {
   if (!texto) return 0;
   if (typeof texto === "number") return texto;
@@ -59,7 +64,7 @@ async function carregarDadosDoServidorOuLocal() {
     console.warn("Não foi possível carregar do servidor:", err);
 
     // se token expirou → redireciona
-    if (err.message.includes("401")) {
+    if (err && err.message && err.message.includes && err.message.includes("401")) {
       localStorage.removeItem("token");
       window.location.href = "login.html";
       return [];
@@ -98,9 +103,7 @@ function filtrarListaPorIntervalo(lista, inicioStr, fimStr, debug = true) {
 
     if (debug) {
       console.log(
-        `→ ${item.placa || "(sem placa)"} | ${item.data} → ${
-          dentro ? "✅ dentro" : "❌ fora"
-        }`
+        `→ ${item.placa || "(sem placa)"} | ${item.data} → ${dentro ? "✅ dentro" : "❌ fora"}`
       );
     }
 
@@ -114,78 +117,95 @@ function filtrarListaPorIntervalo(lista, inicioStr, fimStr, debug = true) {
   return filtrados;
 }
 
-// ----------------- construir tabela -----------------
-function construirTabela(dados) {
+// ----------------- construir CARDS (com paginação) -----------------
+// ----------------- construir CARDS (corrigido: totais globais + paginação) -----------------
+function construirCards(dados, pagina = 1) {
   if (!dados || dados.length === 0) return "<p>Nenhum dado encontrado.</p>";
 
-  let html = `
-    <table class="table-relatorio">
-      <thead>
-        <tr>
-          <th>Data</th>
-          <th>Placa</th>
-          <th>Kwh</th>
-          <th>Refrigerante</th>
-          <th>Valor</th>
-          <th>Forma de Pagamento</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
-
+  // calculo de totais a partir do conjunto completo (dados)
   let totalGeral = 0, totalDinheiro = 0, totalPix = 0, totalCartao = 0;
   let totalKwh = 0, totalBebidas = 0;
 
   dados.forEach(item => {
-    const valor = moedaDesformatar(item.valor);
-    const forma = (item.forma_pagamento || "—").trim();
-    const formaLower = forma.toLowerCase();
+    const valorNum = moedaDesformatar(item.valor);
+    const formaRaw = (item.forma_pagamento || item.formaPagamento || "").toString().trim().toLowerCase();
     const kwh = parseFloat(item.kwh) || 0;
-    const refri = parseFloat(item.refrigerante) || 0;
+    const refri = moedaDesformatar(item.refrigerante || item.refrigerante_valor || 0);
 
-    totalGeral += valor;
+    totalGeral += valorNum;
     totalKwh += kwh;
     totalBebidas += refri;
 
-    if (formaLower === "dinheiro") totalDinheiro += valor;
-    else if (formaLower === "pix") totalPix += valor;
-    else if (formaLower === "cartao" || formaLower === "cartão") totalCartao += valor;
+    if (formaRaw === "dinheiro") totalDinheiro += valorNum;
+    else if (formaRaw === "pix") totalPix += valorNum;
+    else if (formaRaw === "cartao" || formaRaw === "cartão") totalCartao += valorNum;
+  });
+
+  // fatia de dados para a página atual
+  const inicioIdx = (pagina - 1) * cardsPorPagina;
+  const fimIdx = inicioIdx + cardsPorPagina;
+  const paginaDados = dados.slice(inicioIdx, fimIdx);
+
+  // montar html dos cards
+  let html = `<div class="cards-container">`;
+
+  paginaDados.forEach(item => {
+    const valorNum = moedaDesformatar(item.valor);
+    const formaRaw = (item.forma_pagamento || item.formaPagamento || "—").toString();
+    const forma = formaRaw.trim().toLowerCase();
+    const kwh = parseFloat(item.kwh) || 0;
+    const refri = moedaDesformatar(item.refrigerante || item.refrigerante_valor || 0);
+
+    let icone = "🧾";
+    if (forma === "pix") icone = "⚡";
+    else if (forma === "dinheiro") icone = "💵";
+    else if (forma === "cartao" || forma === "cartão") icone = "💳";
 
     html += `
-      <tr>
-        <td>${formatarDataBR(item.data)}</td>
-        <td>${item.placa}</td>
-        <td>${kwh.toFixed(2)}</td>
-        <td>${formatarMoedaNumero(refri)}</td>
-        <td>${formatarMoedaNumero(valor)}</td>
-        <td>${forma}</td>
-      </tr>
+      <div class="card-registro" data-pagamento="${forma}">
+        <div class="card-header">
+          <div class="icone">${icone}</div>
+          <h3>Relatório de Consumo</h3>
+        </div>
+        <div class="card-body">
+          <p><span>Data</span><span>${formatarDataBR(item.data)}</span></p>
+          <p><span>Placa</span><span>${item.placa || "—"}</span></p>
+          <p><span>Kwh</span><span>${kwh.toFixed(2)}</span></p>
+          <p><span>Refrigerante</span><span>${formatarMoedaNumero(refri)}</span></p>
+          <p class="valor"><span>Valor</span><span>${formatarMoedaNumero(valorNum)}</span></p>
+          <span class="forma-pagamento">${formaRaw}</span>
+        </div>
+      </div>
     `;
   });
 
-  html += `
-      </tbody>
-      <tfoot>
-        <tr>
-          <td colspan="2"><strong>Totais:</strong></td>
-          <td>${totalKwh.toFixed(2)}</td>
-          <td>${formatarMoedaNumero(totalBebidas)}</td>
-          <td>${formatarMoedaNumero(totalGeral)}</td>
-          <td></td>
-        </tr>
-      </tfoot>
-    </table>
-  `;
+  html += `</div>`;
 
-  // atualiza totais na UI
+  // PAGINAÇÃO
+  const totalPaginas = Math.ceil(dados.length / cardsPorPagina);
+  if (totalPaginas > 1) {
+    html += `
+      <div class="paginacao" style="display:flex;gap:12px;align-items:center;justify-content:center;margin-top:18px;">
+        <button id="btn-prev" ${pagina === 1 ? "disabled" : ""}>Anterior</button>
+        <span> Página ${pagina} de ${totalPaginas} </span>
+        <button id="btn-next" ${pagina === totalPaginas ? "disabled" : ""}>Próximo</button>
+      </div>
+    `;
+  }
+
+  // atualizar totais na UI com os valores globais corretos (do conjunto filtrado)
   $("#total-geral").text(formatarMoedaNumero(totalGeral));
   $("#total-especie").text(formatarMoedaNumero(totalDinheiro));
   $("#total-pix").text(formatarMoedaNumero(totalPix));
   $("#total-cartao").text(formatarMoedaNumero(totalCartao));
 
+  // atualiza resumo com totais globais
   renderResumo(totalKwh, totalBebidas, totalGeral);
+
   return html;
 }
+
+
 
 // ----------------- resumo e analise -----------------
 function renderResumo(kwh, bebidas, receita) {
@@ -200,6 +220,25 @@ function renderResumo(kwh, bebidas, receita) {
   $("#resumo-consumo").html(html);
 }
 
+// ----------------- relatório do período (novo) -----------------
+// ----------------- relatório do período (simplificado) -----------------
+function renderRelatorioPeriodo(inicioStr, fimStr, dados) {
+  const inicioTxt = inicioStr ? formatarDataBR(inicioStr) : "—";
+  const fimTxt = fimStr ? formatarDataBR(fimStr) : "—";
+  const totalRegistros = Array.isArray(dados) ? dados.length : 0;
+
+  return `
+    <br><div id="relatorio-periodo" style="background:#fff;border-radius:10px;padding:12px 16px;margin-bottom:14px;box-shadow:0 6px 18px rgba(0,0,0,0.04);">
+      <strong>Relatório do Período</strong>
+      <p style="margin:.25rem 0 0;color:#374151">
+        Entre <strong>${inicioTxt}</strong> e <strong>${fimTxt}</strong> foram encontrados <strong>${totalRegistros}</strong> registros.
+      </p>
+    </div>
+  `;
+}
+
+
+
 // ----------------- util datas -----------------
 function toInputDate(d) {
   const yy = d.getFullYear();
@@ -212,20 +251,42 @@ function addMonths(d, n) { const nd = new Date(d); nd.setMonth(nd.getMonth() + n
 function addYears(d, n) { const nd = new Date(d); nd.setFullYear(nd.getFullYear() + n); return nd; }
 
 // ----------------- render geral (async) -----------------
-async function renderTudo(inicio, fim) {
+async function renderTudo(inicio, fim, pagina = 1) {
   $("#relatorio-container").html("<p>🔄 Carregando dados...</p>");
   const todos = await carregarDadosDoServidorOuLocal();
   const filtrados = filtrarListaPorIntervalo(todos, inicio, fim);
 
+  // guarda globalmente para navegação de páginas
+  dadosFiltradosGlobais = filtrados;
+  paginaAtual = pagina;
+
   if (!inicio || !fim || filtrados.length === 0) {
-    $("#relatorio-container").html("<p>Nenhum dado encontrado.</p>");
+    $("#relatorio-container").html(`
+      <div class="sem-dados">
+        <i>📊</i>
+        <p>Nenhum dado encontrado. <br>Selecione um período para gerar o relatório.</p>
+      </div>
+    `);
     $("#resumo-consumo").html("");
     $("#total-geral, #total-especie, #total-pix, #total-cartao").text("R$ 0,00");
     return;
   }
 
-  $("#relatorio-container").html(construirTabela(filtrados));
+    // primeiro monta o resumo de período (novo) e depois os cards
+    const relPeriodoHtml = renderRelatorioPeriodo(inicio, fim, filtrados);
+    $("#relatorio-container").html(relPeriodoHtml + construirCards(filtrados));
+  
+
+  // eventos da paginação (reescrever sempre que renderiza para garantir binding)
+  $("#btn-prev").off("click").on("click", () => {
+    if (paginaAtual > 1) renderTudo(inicio, fim, paginaAtual - 1);
+  });
+  $("#btn-next").off("click").on("click", () => {
+    const totalPaginas = Math.ceil(filtrados.length / cardsPorPagina);
+    if (paginaAtual < totalPaginas) renderTudo(inicio, fim, paginaAtual + 1);
+  });
 }
+
 
 // ----------------- análise por período -----------------
 async function atualizarAnalisePorPeriodo() {
@@ -254,10 +315,7 @@ async function atualizarAnalisePorPeriodo() {
       totalReceita += moedaDesformatar(item.valor);
     });
 
-    // Número de dias no intervalo (mínimo 1)
     const dias = Math.max(1, Math.ceil((fim - inicio) / (1000 * 60 * 60 * 24)) + 1);
-
-    // 🔹 Agora calculamos a média
     const mediaKwh = totalKwh / dias;
     const mediaBebidas = totalBebidas / dias;
     const mediaReceita = totalReceita / dias;
@@ -268,9 +326,9 @@ async function atualizarAnalisePorPeriodo() {
   });
 }
 
-
 // ----------------- eventos e inicialização -----------------
 $(document).ready(function () {
+  // mensagem inicial
   $("#relatorio-container").html(`
     <div class="sem-dados">
       <i>📊</i>
@@ -285,7 +343,9 @@ $(document).ready(function () {
       alert("⚠ Selecione data inicial e final!");
       return;
     }
-    await renderTudo(inicio, fim);
+
+await renderTudo(inicio, fim, 1);
+
   });
 
   $(".filtro-rapido").on("click", async function () {
@@ -300,7 +360,7 @@ $(document).ready(function () {
 
     $("#data-inicial").val(toInputDate(inicio));
     $("#data-final").val(toInputDate(fim));
-    await renderTudo(toInputDate(inicio), toInputDate(fim));
+    await renderTudo(toInputDate(inicio), toInputDate(fim), 1);
   });
 
   $("#btn-limpar").on("click", function () {
@@ -309,6 +369,5 @@ $(document).ready(function () {
     $("#total-geral, #total-especie, #total-pix, #total-cartao").text("R$ 0,00");
   });
 
-  // 🔄 Atualiza tabela de análise automaticamente ao carregar
   atualizarAnalisePorPeriodo();
 });
