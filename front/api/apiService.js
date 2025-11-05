@@ -1,6 +1,6 @@
 // front/api/apiService.js
 
-const API_BASE_URL = "https://gridflow-api.onrender.com/api";
+const API_BASE_URL = "https://gridflow-api.onrender.com";
 
 // 🔹 Login do usuário
 export async function login(email, senha) {
