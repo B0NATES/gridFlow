@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:4000/api";
+const API_BASE_URL = "https://gridflow-api.onrender.com";
 
 document.getElementById("login-form").addEventListener("submit", async (e) => {
   e.preventDefault();
