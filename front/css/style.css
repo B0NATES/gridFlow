@@ -830,3 +830,40 @@ body {
   color: #777;
   padding: 1.5rem;
 }
+
+/* ===============================
+   🔚 BOTÃO DE LOGOUT (SIDEBAR)
+   =============================== */
+   .logout-container {
+    margin-top: auto;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding-bottom: 1rem;
+  }
+  
+  .logout-btn {
+    width: 48px;
+    height: 48px;
+    border: none;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--branco);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transicao);
+  }
+  
+  .logout-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+  }
+  
+  .logout-btn svg {
+    width: 22px;
+    height: 22px;
+    color: inherit;
+  }
+  
