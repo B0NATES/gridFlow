@@ -635,6 +635,422 @@
     color: inherit;
   }
 
+  /* 🔹 Ajustes de responsividade (adicione no final de relatorios.css) */
+@media (max-width: 992px) {
+  .container-relatorios {
+    padding: 1rem;
+    margin-left: 0 !important;
+    width: 100%;
+  }
+
+  /* Header e descrição */
+  .container-relatorios header h1 {
+    font-size: 1.6rem;
+    text-align: center;
+  }
+  .container-relatorios .descricao {
+    font-size: 0.95rem;
+    text-align: center;
+  }
+
+  /* Filtros */
+  .filtros-container {
+    text-align: center;
+  }
+
+  .filtros-datas {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .filtros-datas label {
+    text-align: left;
+    margin-left: 4px;
+  }
+
+  .filtros-datas input {
+    width: 100%;
+  }
+
+  .filtros-datas .btn {
+    width: 100%;
+  }
+
+  /* Atalhos (botões Diário/Semanal/etc) */
+  .atalhos {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.8rem;
+  }
+
+  .atalhos button {
+    flex: 1 1 45%;
+    font-size: 0.9rem;
+    padding: 0.6rem;
+  }
+
+  /* Totais */
+  .cards-totais {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .card-total {
+    font-size: 0.95rem;
+    text-align: center;
+  }
+
+  /* Tabela de análise */
+  .table-responsive-x {
+    overflow-x: auto;
+  }
+
+  .table-base {
+    font-size: 0.85rem;
+    width: 100%;
+  }
+
+  /* Sidebar */
+  .panel-nav-lateral-esquerdo {
+    position: fixed;
+    left: -240px;
+    width: 220px;
+    height: 100%;
+    top: 0;
+    background: #1b2cc1;
+    transition: left 0.3s ease;
+    z-index: 2000;
+    padding-top: 1rem;
+  }
+
+  .panel-nav-lateral-esquerdo.active {
+    left: 0;
+  }
+
+  .menu-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: none;
+    z-index: 1500;
+  }
+
+  .menu-overlay.show {
+    display: block;
+  }
+
+  /* Botão logout */
+  .logout-container {
+    position: absolute;
+    bottom: 1rem;
+    left: 0;
+    width: 100%;
+    text-align: center;
+  }
+
+  .logout-btn {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 1.2rem;
+    transition: opacity 0.3s;
+  }
+
+  .logout-btn:hover {
+    opacity: 0.8;
+  }
+}
+
+@media (max-width: 480px) {
+  .container-relatorios header h1 {
+    font-size: 1.4rem;
+  }
+
+  .atalhos button {
+    flex: 1 1 100%;
+  }
+
+  .filtros-datas input,
+  .filtros-datas .btn {
+    font-size: 0.9rem;
+  }
+}
+
+
+@media (max-width: 992px) {
+  /* Centraliza tudo dentro do container principal */
+  .filtros-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .filtros-datas {
+    width: 100%;
+    max-width: 340px;
+  }
+
+  .atalhos {
+    justify-content: center;
+  }
+
+  .atalhos button {
+    max-width: 150px;
+  }
+
+  /* Centraliza os cards de totais */
+  .cards-totais {
+    align-items: center;
+  }
+
+  .card-total {
+    width: 90%;
+    max-width: 380px;
+  }
+
+  /* Título e descrição */
+  .container-relatorios header {
+    text-align: center;
+  }
+
+  .container-relatorios .descricao {
+    margin-bottom: 1rem;
+  }
+}
+
+
+/* -------------------
+   Fix centralização Mobile (colocar no final do relatorios.css)
+   ------------------- */
+   @media (max-width: 992px) {
+    /* garante que o container ocupe toda a largura e esteja centralizado */
+    .container-relatorios {
+      margin: 0 auto !important;
+      padding-left: 16px !important;
+      padding-right: 16px !important;
+      width: 100% !important;
+      max-width: 780px; /* limite confortável em telas grandes de celular */
+      box-sizing: border-box;
+    }
+  
+    /* força os filtros a ficarem centralizados e com largura controlada */
+    .filtros-container {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      gap: 0.75rem;
+    }
+  
+    .filtros-datas {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: stretch !important;
+      width: 100% !important;
+      max-width: 420px;
+      margin: 0 auto !important;
+      gap: 0.6rem;
+    }
+  
+    /* inputs e botões com largura total (dentro do max-width) */
+    .filtros-datas input[type="date"],
+    .filtros-datas .btn {
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box;
+    }
+  
+    /* atalhos centralizados com tamanho controlado */
+    .atalhos {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      justify-content: center !important;
+      gap: 0.5rem !important;
+      width: 100%;
+      max-width: 420px;
+      margin: 0.5rem auto 0;
+    }
+    .atalhos button {
+      flex: 1 1 calc(50% - 8px) !important;
+      max-width: 200px;
+    }
+  
+    /* títulos centralizados */
+    .container-relatorios header {
+      text-align: center !important;
+    }
+  
+    /* cards de totais centralizados e com largura consistente */
+    .cards-totais {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 0.6rem !important;
+      align-items: center !important;
+      width: 100%;
+      max-width: 420px;
+      margin: 0.75rem auto;
+    }
+    .card-total {
+      width: 100% !important;
+      max-width: 420px;
+      text-align: center;
+      padding: 12px 14px;
+    }
+  
+    /* relatórios / container de cards centralizados */
+    #relatorio-container, .cards-container {
+      width: 100% !important;
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 0;
+    }
+  
+    /* corrige offset causado pela sidebar fixa (se ainda existir) */
+    .panel-nav-lateral-esquerdo {
+      left: -9999px !important;    /* esconde fisicamente na visualização mobile */
+      visibility: visible;         /* mantém acessível para JS que reabre o menu */
+      transform: translateX(-100%) !important;
+    }
+    .panel-nav-lateral-esquerdo.active {
+      left: 0 !important;
+      transform: translateX(0) !important;
+    }
+  
+    /* garante que o botão do menu hamburger fique visível no topo esquerdo */
+    #btn-menu { display: inline-block !important; position: relative; z-index: 1600; }
+  
+    /* reduz paddings excessivos na tabela / cards para mobile */
+    .card-registro, #relatorio-periodo, .modal-adicionar .content {
+      padding-left: 12px !important;
+      padding-right: 12px !important;
+    }
+  }
+  
+  /* ajuste fino para telas muito pequenas */
+  @media (max-width: 420px) {
+    .atalhos button { flex: 1 1 100% !important; max-width: 100% !important; }
+    .filtros-datas { max-width: 360px !important; }
+    .cards-totais { max-width: 360px !important; }
+  }
+  
+  
+  /* -------------------
+   Corrige sobreposição do cabeçalho no conteúdo
+   ------------------- */
+header,
+.container-relatorios,
+main {
+  margin-top: 80px !important; /* empurra o conteúdo pra baixo da navbar */
+}
+
+/* ajuste fino para telas menores */
+@media (max-width: 600px) {
+  header,
+  .container-relatorios,
+  main {
+    margin-top: 100px !important; /* mais espaço se o header for mais alto no mobile */
+  }
+}
+
+/* ===========================
+   🔹 ANÁLISE DE CONSUMO POR PERÍODO
+   =========================== */
+
+   #analise-consumo {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+    padding: 24px;
+    margin-top: 2rem;
+  }
+  
+  #analise-consumo h2 {
+    font-size: 1.5rem;
+    color: #1b1b1b;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Tabela responsiva */
+  .table-responsive-x {
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid #e3e3e3;
+  }
+  
+  .table-base {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.95rem;
+    text-align: center;
+  }
+  
+  .table-base thead {
+    background: #0066ff;
+    color: #fff;
+  }
+  
+  .table-base th {
+    padding: 12px 8px;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  
+  .table-base tbody tr {
+    transition: background-color 0.2s ease-in-out;
+  }
+  
+  .table-base tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  .table-base tbody tr:hover {
+    background-color: #e8f0ff;
+  }
+  
+  .table-base td {
+    padding: 10px;
+    color: #333;
+  }
+  
+  /* Células de destaque (valores numéricos) */
+  .table-base td[id*="receita"] {
+    color: #009933;
+    font-weight: 600;
+  }
+  
+  .table-base td[id*="bebidas"] {
+    color: #ff6600;
+  }
+  
+  .table-base td[id*="kwh"] {
+    color: #0066cc;
+  }
+  
+  /* Mobile-friendly */
+  @media (max-width: 768px) {
+    #analise-consumo {
+      padding: 16px;
+    }
+  
+    #analise-consumo h2 {
+      font-size: 1.25rem;
+    }
+  
+    .table-base th,
+    .table-base td {
+      padding: 8px;
+      font-size: 0.85rem;
+    }
+  }
+
   
   
   /* ======================
