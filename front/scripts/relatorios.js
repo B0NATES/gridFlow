@@ -1,5 +1,5 @@
 // front/scripts/relatorios.js
-import { getRelatorios } from "../api/apiService.js";
+import { getRelatorios } from "../service/apiService.js";
 
 // PAGINAÇÃO: controle global
 const cardsPorPagina = 5;

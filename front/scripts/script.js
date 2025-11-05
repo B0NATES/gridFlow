@@ -1,4 +1,4 @@
-import { getRelatorios, addRelatorio } from "../api/apiService.js";
+import { getRelatorios, addRelatorio } from "../service/apiService.js";
 
 let array = [];
 

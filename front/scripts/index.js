@@ -1,4 +1,4 @@
-import { getRelatorios } from "../api/apiService.js";
+import { getRelatorios } from "../service/apiService.js";
 
 // ===============================
 // 💰 Função para formatar valores
