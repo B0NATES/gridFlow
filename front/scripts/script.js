@@ -1,4 +1,7 @@
 import { getRelatorios, addRelatorio } from "../service/apiService.js";
+import { checkAuth } from "./authCheck.js";
+checkAuth();
+
 
 let array = [];
 

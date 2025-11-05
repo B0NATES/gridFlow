@@ -1,4 +1,7 @@
 import { getRelatorios } from "../service/apiService.js";
+import { checkAuth } from "./authCheck.js";
+checkAuth();
+
 
 // ===============================
 // 💰 Função para formatar valores

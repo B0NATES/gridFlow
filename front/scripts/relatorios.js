@@ -1,5 +1,8 @@
 // front/scripts/relatorios.js
 import { getRelatorios } from "../service/apiService.js";
+import { checkAuth } from "./authCheck.js";
+checkAuth();
+
 
 // PAGINAÇÃO: controle global
 const cardsPorPagina = 5;
